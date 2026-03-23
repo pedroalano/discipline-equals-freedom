@@ -1,0 +1,42 @@
+# pnpm store (content-addressable cache — never commit this)
+.pnpm-store/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+.playwright/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+
+# Turborepo
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma generated client
+apps/api/src/generated/
