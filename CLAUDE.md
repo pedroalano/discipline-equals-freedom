@@ -34,10 +34,11 @@ docker compose up           # subsequent runs
 docker compose up -d        # run in background
 
 # ── Prisma ────────────────────────────────────────────────────────────────────
-docker compose exec api pnpm prisma migrate dev     # create + apply a new migration
-docker compose exec api pnpm prisma migrate deploy  # apply existing migrations
-docker compose exec api pnpm prisma generate        # regenerate client after schema change
-docker compose exec api pnpm prisma studio          # open Prisma Studio
+# Use --filter api exec so pnpm resolves the prisma binary from apps/api's dependencies
+docker compose exec api pnpm --filter api exec prisma migrate dev --name <name>  # create + apply migration
+docker compose exec api pnpm --filter api exec prisma migrate deploy             # apply existing migrations
+docker compose exec api pnpm --filter api exec prisma generate                   # regenerate client after schema change
+docker compose exec api pnpm --filter api exec prisma studio                     # open Prisma Studio
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 docker compose exec api pnpm jest path/to/file.spec.ts   # run a single backend test

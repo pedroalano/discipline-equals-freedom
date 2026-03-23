@@ -15,4 +15,4 @@ COPY apps/api/package.json ./apps/api/
 # Source is bind-mounted at runtime; the anonymous volume in compose restores these modules.
 RUN pnpm install --frozen-lockfile
 
-CMD ["pnpm", "--filter", "api", "run", "dev"]
+CMD ["sh", "-c", "pnpm --filter @zenfocus/types build && pnpm --filter api run dev"]
