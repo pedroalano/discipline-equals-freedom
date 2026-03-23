@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-zenfocus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zenfocus}
+      POSTGRES_DB: ${POSTGRES_DB:-zenfocus}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zenfocus_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-zenfocus}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - zenfocus_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - '3001:3001'
+    volumes:
+      # Bind-mount the full source so code changes reflect immediately
+      - .:/app
+      # Anonymous volumes restore node_modules baked into the image,
+      # preventing the host's missing/different modules from breaking the container
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://zenfocus:zenfocus@postgres:5432/zenfocus}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      PORT: 3001
+      NODE_ENV: development
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - zenfocus_network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      # Prevent the bind-mount from clobbering Next.js build cache
+      - /app/apps/web/.next
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+    depends_on:
+      - api
+    networks:
+      - zenfocus_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  zenfocus_network:
+    driver: bridge
