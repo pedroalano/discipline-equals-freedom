@@ -1,0 +1,9 @@
+{
+  "name": "@zenfocus/config",
+  "version": "0.0.1",
+  "private": true,
+  "files": [
+    "eslint",
+    "tsconfig"
+  ]
+}
