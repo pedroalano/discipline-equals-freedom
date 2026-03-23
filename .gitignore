@@ -3,6 +3,8 @@
 
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
 
 # Build outputs
 dist/
@@ -38,5 +40,5 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
-# Prisma generated client
+# Prisma generated client (regenerated via pnpm prisma generate)
 apps/api/src/generated/
