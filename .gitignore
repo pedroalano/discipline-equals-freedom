@@ -42,3 +42,9 @@ Thumbs.db
 
 # Prisma generated client (regenerated via pnpm prisma generate)
 apps/api/src/generated/
+
+# Next.js auto-generated type reference file
+apps/web/next-env.d.ts
+
+# AI tooling
+.ai-jail

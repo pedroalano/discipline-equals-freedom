@@ -19,4 +19,4 @@ RUN pnpm install --frozen-lockfile
 ENV WATCHPACK_POLLING=true
 ENV CHOKIDAR_USEPOLLING=true
 
-CMD ["pnpm", "--filter", "web", "run", "dev"]
+CMD ["sh", "-c", "pnpm --filter @zenfocus/types build && pnpm --filter web run dev"]
