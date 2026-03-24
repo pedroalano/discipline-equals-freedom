@@ -1,4 +1,5 @@
 import type { DailyImageResponse } from '@zenfocus/types';
+import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
 
 async function getDailyImage(): Promise<DailyImageResponse | null> {
@@ -12,29 +13,6 @@ async function getDailyImage(): Promise<DailyImageResponse | null> {
   } catch {
     return null;
   }
-}
-
-function getGreeting(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
-function ClockGreeting() {
-  const now = new Date();
-  const hour = now.getHours();
-  const time = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  return (
-    <div className="text-center">
-      <p className="text-7xl font-thin tracking-widest text-white drop-shadow">{time}</p>
-      <p className="mt-2 text-xl font-light text-white/80 drop-shadow">{getGreeting(hour)}</p>
-    </div>
-  );
 }
 
 export default async function DashboardPage() {
