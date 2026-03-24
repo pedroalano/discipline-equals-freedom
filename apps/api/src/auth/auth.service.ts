@@ -5,7 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import type { Redis } from 'ioredis';
 import { UsersService } from '../users/users.service';
-import { REDIS_CLIENT } from './auth.constants';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 import type { RegisterDto } from './dto/register.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { AuthResponse, UserResponse } from '@zenfocus/types';

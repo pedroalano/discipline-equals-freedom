@@ -24,6 +24,14 @@ export interface AuthResponse {
   user: UserResponse;
 }
 
+// ── DailyImage ────────────────────────────────────────────────────────────────
+
+export interface DailyImageResponse {
+  url: string;
+  author: string;
+  authorUrl: string;
+}
+
 // ── FocusItem ─────────────────────────────────────────────────────────────────
 
 export interface CreateFocusItemRequest {

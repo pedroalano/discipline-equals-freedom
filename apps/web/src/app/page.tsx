@@ -1,5 +1,18 @@
-import { getRandomPhoto } from '@/lib/unsplash';
+import type { DailyImageResponse } from '@zenfocus/types';
 import { FocusPanel } from './components/FocusPanel';
+
+async function getDailyImage(): Promise<DailyImageResponse | null> {
+  const apiUrl = process.env['API_INTERNAL_URL'];
+  if (!apiUrl) return null;
+
+  try {
+    const res = await fetch(`${apiUrl}/daily-image`, { cache: 'no-store' });
+    if (!res.ok || res.status === 204) return null;
+    return (await res.json()) as DailyImageResponse;
+  } catch {
+    return null;
+  }
+}
 
 function getGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -25,7 +38,7 @@ function ClockGreeting() {
 }
 
 export default async function DashboardPage() {
-  const photo = await getRandomPhoto();
+  const photo = await getDailyImage();
 
   return (
     <main
