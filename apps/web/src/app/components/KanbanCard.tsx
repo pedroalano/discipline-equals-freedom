@@ -37,10 +37,10 @@ export function KanbanCard({ card, index, onUpdate, onDelete, shouldReduceMotion
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`group flex items-start gap-2 p-2 bg-white rounded border shadow-sm transition-shadow hover:shadow-md hover:border-gray-300 ${
+            className={`group flex items-start gap-2 p-3 bg-white rounded-md shadow-sm transition-all ring-1 ring-inset hover:shadow-md ${
               snapshot.isDragging
-                ? 'opacity-90 shadow-lg rotate-1 border-gray-300'
-                : 'border-gray-200'
+                ? 'opacity-90 shadow-lg rotate-1 ring-gray-300'
+                : 'ring-gray-100 hover:ring-indigo-300'
             }`}
           >
             <span className="opacity-0 group-hover:opacity-40 text-gray-400 text-xs select-none shrink-0 mt-0.5 cursor-grab">

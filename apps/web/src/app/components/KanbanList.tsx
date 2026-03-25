@@ -6,6 +6,20 @@ import { AnimatePresence, useReducedMotion } from 'framer-motion';
 import { KanbanCard } from './KanbanCard';
 import type { CardResponse, ListResponse } from '@zenfocus/types';
 
+const ACCENT_COLORS = [
+  'border-t-rose-400',
+  'border-t-amber-400',
+  'border-t-emerald-400',
+  'border-t-sky-400',
+  'border-t-violet-400',
+  'border-t-pink-400',
+];
+
+function listAccent(id: string): string {
+  const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return ACCENT_COLORS[hash % ACCENT_COLORS.length] ?? ACCENT_COLORS[0]!;
+}
+
 interface Props {
   list: ListResponse;
   onCardUpdate: (cardId: string, data: { title?: string; description?: string }) => Promise<void>;
@@ -43,11 +57,13 @@ export function KanbanList({
   }
 
   return (
-    <div className="flex flex-col w-64 shrink-0 bg-gray-100 rounded-lg p-3 gap-2">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-sm">
+    <div
+      className={`flex flex-col w-72 shrink-0 bg-white shadow-md rounded-2xl p-3 gap-2 border-t-4 ${listAccent(list.id)}`}
+    >
+      <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-1">
+        <h3 className="font-bold text-base">
           {list.title}
-          <span className="text-xs text-gray-400 ml-1">({list.cards.length})</span>
+          <span className="text-xs text-gray-400 ml-1 font-normal">({list.cards.length})</span>
         </h3>
         <button
           type="button"
@@ -64,7 +80,7 @@ export function KanbanList({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex flex-col gap-2 min-h-[4px] rounded transition-colors ${
+            className={`flex flex-col gap-3 min-h-[4px] rounded transition-colors ${
               snapshot.isDraggingOver ? 'bg-blue-100 ring-1 ring-blue-300' : ''
             }`}
           >
