@@ -1,6 +1,7 @@
 import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
+import { ImageFader } from './components/ImageFader';
 
 async function getDailyImage(): Promise<DailyImageResponse | null> {
   const apiUrl = process.env['API_INTERNAL_URL'];
@@ -19,12 +20,15 @@ export default async function DashboardPage() {
   const photo = await getDailyImage();
 
   return (
-    <main
-      className="relative flex min-h-screen flex-col items-center justify-center gap-10 bg-neutral-900 bg-cover bg-center px-4"
-      style={photo ? { backgroundImage: `url(${photo.url})` } : undefined}
-    >
-      {/* Overlay */}
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 bg-neutral-900 px-4">
+      {/* Background crossfade — fades in once the photo loads client-side */}
+      {photo && <ImageFader url={photo.url} />}
+
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40" />
+
+      {/* Grain texture */}
+      <div className="absolute inset-0 bg-grain" />
 
       <div className="relative z-10 flex flex-col items-center gap-10">
         <ClockGreeting />

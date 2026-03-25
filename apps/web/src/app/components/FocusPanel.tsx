@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { FocusItemResponse } from '@zenfocus/types';
 
 function todayISO(): string {
@@ -18,8 +19,10 @@ export function FocusPanel() {
   const date = todayISO();
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ['focus', date],
     queryFn: () => fetchFocusItems(date),
   });
@@ -65,6 +68,23 @@ export function FocusPanel() {
     },
   });
 
+  useEffect(() => {
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      const tag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
+      if (e.key === 'n') {
+        e.preventDefault();
+        textareaRef.current?.focus();
+      } else if (e.key === 'c') {
+        const first = items.find((item) => !item.completed);
+        if (first) toggleMutation.mutate({ id: first.id, completed: true });
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [items, toggleMutation]);
+
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (text.trim()) createMutation.mutate(text.trim());
@@ -75,6 +95,9 @@ export function FocusPanel() {
       e.preventDefault();
       if (text.trim()) createMutation.mutate(text.trim());
     }
+    if (e.key === 'Escape') {
+      textareaRef.current?.blur();
+    }
   }
 
   return (
@@ -82,6 +105,7 @@ export function FocusPanel() {
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2">
           <textarea
+            ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -99,11 +123,16 @@ export function FocusPanel() {
         </div>
       </form>
 
-      {items.length > 0 && (
-        <ul className="space-y-2">
+      <ul className="space-y-2">
+        <AnimatePresence mode="popLayout">
           {items.map((item) => (
-            <li
+            <motion.li
               key={item.id}
+              layout
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
+              transition={{ duration: 0.2 }}
               className="flex items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 backdrop-blur"
             >
               <button
@@ -112,11 +141,16 @@ export function FocusPanel() {
                 aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
               >
                 {item.completed && (
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="text-white">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
+                  <svg viewBox="0 0 20 20" fill="none" className="text-white">
+                    <motion.path
+                      d="M4 10 L8 14 L16 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
                     />
                   </svg>
                 )}
@@ -133,9 +167,15 @@ export function FocusPanel() {
               >
                 ×
               </button>
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </AnimatePresence>
+      </ul>
+
+      {items.length === 0 && !isLoading && (
+        <p className="select-none py-6 text-center text-sm text-white/30">
+          What matters most today?
+        </p>
       )}
     </div>
   );
