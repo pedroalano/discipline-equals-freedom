@@ -25,8 +25,7 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
 
   return (
     <main className="h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-gray-200 flex flex-col gap-2">
-        <h1 className="text-xl font-bold">{board.title}</h1>
+      <header className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col gap-1">
         <Link
           href="/boards"
           className="text-gray-400 hover:text-gray-700 text-sm"
@@ -34,6 +33,7 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
         >
           ← Back to boards
         </Link>
+        <h1 className="text-xl font-bold">{board.title}</h1>
       </header>
       <div className="flex-1 overflow-x-auto">
         <KanbanBoard initialData={board} />

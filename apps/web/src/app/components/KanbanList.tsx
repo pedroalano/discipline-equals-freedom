@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
+import { AnimatePresence, useReducedMotion } from 'framer-motion';
 import { KanbanCard } from './KanbanCard';
 import type { CardResponse, ListResponse } from '@zenfocus/types';
 
@@ -22,6 +23,7 @@ export function KanbanList({
 }: Props) {
   const [addingCard, setAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+  const shouldReduceMotion = useReducedMotion();
 
   const sortedCards = [...list.cards].sort(
     (a: CardResponse, b: CardResponse) => a.position - b.position,
@@ -35,13 +37,21 @@ export function KanbanList({
     setAddingCard(false);
   }
 
+  function handleDeleteList() {
+    if (!confirm('Delete this list and all its cards?')) return;
+    void onListDelete(list.id);
+  }
+
   return (
     <div className="flex flex-col w-64 shrink-0 bg-gray-100 rounded-lg p-3 gap-2">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-sm">{list.title}</h3>
+        <h3 className="font-semibold text-sm">
+          {list.title}
+          <span className="text-xs text-gray-400 ml-1">({list.cards.length})</span>
+        </h3>
         <button
           type="button"
-          onClick={() => void onListDelete(list.id)}
+          onClick={handleDeleteList}
           className="text-gray-400 hover:text-red-500 text-xs"
           aria-label="Delete list"
         >
@@ -54,19 +64,22 @@ export function KanbanList({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex flex-col gap-2 min-h-[4px] ${
-              snapshot.isDraggingOver ? 'bg-blue-50 rounded' : ''
+            className={`flex flex-col gap-2 min-h-[4px] rounded transition-colors ${
+              snapshot.isDraggingOver ? 'bg-blue-100 ring-1 ring-blue-300' : ''
             }`}
           >
-            {sortedCards.map((card, index) => (
-              <KanbanCard
-                key={card.id}
-                card={card}
-                index={index}
-                onUpdate={onCardUpdate}
-                onDelete={onCardDelete}
-              />
-            ))}
+            <AnimatePresence>
+              {sortedCards.map((card, index) => (
+                <KanbanCard
+                  key={card.id}
+                  card={card}
+                  index={index}
+                  onUpdate={onCardUpdate}
+                  onDelete={onCardDelete}
+                  shouldReduceMotion={shouldReduceMotion ?? false}
+                />
+              ))}
+            </AnimatePresence>
             {provided.placeholder}
           </div>
         )}
