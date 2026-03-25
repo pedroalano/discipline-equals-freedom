@@ -1,12 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   const allowedOrigins = process.env['CORS_ORIGIN']?.split(',').map((o) => o.trim()) ?? [];
   app.enableCors({
