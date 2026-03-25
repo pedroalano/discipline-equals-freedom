@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { BoardDetailResponse } from '@zenfocus/types';
 import { KanbanBoard } from '../../components/KanbanBoard';
 
@@ -24,8 +25,15 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
 
   return (
     <main className="h-screen flex flex-col">
-      <header className="px-6 py-3 border-b border-gray-200 flex items-center gap-3">
+      <header className="px-6 py-4 border-b border-gray-200 flex flex-col gap-2">
         <h1 className="text-xl font-bold">{board.title}</h1>
+        <Link
+          href="/boards"
+          className="text-gray-400 hover:text-gray-700 text-sm"
+          aria-label="Back to boards"
+        >
+          ← Back to boards
+        </Link>
       </header>
       <div className="flex-1 overflow-x-auto">
         <KanbanBoard initialData={board} />
