@@ -5,6 +5,29 @@ import { BoardCreateButton } from './BoardCreateButton';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
+const GRADIENTS = [
+  'from-indigo-500 to-purple-600',
+  'from-rose-500 to-pink-600',
+  'from-amber-500 to-orange-500',
+  'from-emerald-500 to-teal-600',
+  'from-sky-500 to-blue-600',
+  'from-violet-500 to-purple-700',
+];
+
+function boardGradient(id: string): string {
+  const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return GRADIENTS[hash % GRADIENTS.length] ?? GRADIENTS[0]!;
+}
+
+function formatRelativeTime(dateString: string): string {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `Updated ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Updated ${hrs}h ago`;
+  return `Updated ${Math.floor(hrs / 24)}d ago`;
+}
+
 async function getBoards(): Promise<BoardSummaryResponse[]> {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value ?? '';
@@ -46,12 +69,16 @@ export default async function BoardsPage() {
             <Link
               key={board.id}
               href={`/boards/${board.id}`}
-              className="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow border border-gray-200 border-l-4 border-l-indigo-400"
+              className="block aspect-video relative rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <h2 className="font-semibold text-lg">{board.title}</h2>
-              <p className="text-sm text-gray-400 mt-1">
-                {new Date(board.updatedAt).toLocaleDateString()}
-              </p>
+              <div className={`absolute inset-0 bg-gradient-to-br ${boardGradient(board.id)}`} />
+              <div className="absolute inset-0 bg-black/20" />
+              <div className="relative h-full flex flex-col justify-end p-4">
+                <h2 className="font-bold text-lg text-white leading-tight">{board.title}</h2>
+                <p className="text-sm text-white/70 mt-0.5">
+                  {formatRelativeTime(board.updatedAt)}
+                </p>
+              </div>
             </Link>
           ))}
         </div>

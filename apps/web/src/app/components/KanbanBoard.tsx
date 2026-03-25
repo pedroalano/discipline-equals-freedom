@@ -195,7 +195,7 @@ export function KanbanBoard({ initialData }: Props) {
       onDragStart={(start) => setDragging(start.draggableId)}
       onDragEnd={(result) => void handleDragEnd(result)}
     >
-      <div className="flex gap-4 p-6 h-full items-start">
+      <div className="flex gap-4 p-6 h-full items-start bg-slate-100">
         {lists.map((list) => (
           <KanbanList
             key={list.id}
@@ -207,7 +207,7 @@ export function KanbanBoard({ initialData }: Props) {
           />
         ))}
         {addingList ? (
-          <div className="shrink-0 w-64 bg-gray-100 rounded-lg p-3 flex flex-col gap-2">
+          <div className="shrink-0 w-72 bg-white rounded-2xl shadow-md p-3 flex flex-col gap-2">
             <input
               autoFocus
               value={newListTitle}
@@ -246,7 +246,7 @@ export function KanbanBoard({ initialData }: Props) {
           <button
             type="button"
             onClick={() => setAddingList(true)}
-            className="shrink-0 w-64 p-3 bg-gray-100 rounded-lg text-sm text-gray-500 hover:bg-gray-200 text-left"
+            className="shrink-0 w-72 p-3 bg-white/60 rounded-2xl shadow-sm text-sm text-gray-500 hover:bg-white hover:shadow-md text-left transition-all"
           >
             + Add list
           </button>
