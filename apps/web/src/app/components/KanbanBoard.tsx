@@ -29,6 +29,8 @@ export function KanbanBoard({ initialData }: Props) {
   const [lists, setLists] = useState<ListResponse[]>(
     [...initialData.lists].sort((a, b) => a.position - b.position),
   );
+  const [addingList, setAddingList] = useState(false);
+  const [newListTitle, setNewListTitle] = useState('');
   const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
 
@@ -173,17 +175,19 @@ export function KanbanBoard({ initialData }: Props) {
   }
 
   async function handleAddList() {
-    const title = window.prompt('List title?');
-    if (!title) return;
+    const trimmed = newListTitle.trim();
+    if (!trimmed) return;
     const res = await fetch('/api/lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, boardId: initialData.id }),
+      body: JSON.stringify({ title: trimmed, boardId: initialData.id }),
     });
     if (res.ok) {
       const newList = (await res.json()) as ListResponse;
       setLists((prev) => [...prev, newList].sort((a, b) => a.position - b.position));
     }
+    setNewListTitle('');
+    setAddingList(false);
   }
 
   return (
@@ -202,13 +206,51 @@ export function KanbanBoard({ initialData }: Props) {
             onListDelete={handleListDelete}
           />
         ))}
-        <button
-          type="button"
-          onClick={() => void handleAddList()}
-          className="shrink-0 w-64 p-3 bg-gray-100 rounded-lg text-sm text-gray-500 hover:bg-gray-200 text-left"
-        >
-          + Add list
-        </button>
+        {addingList ? (
+          <div className="shrink-0 w-64 bg-gray-100 rounded-lg p-3 flex flex-col gap-2">
+            <input
+              autoFocus
+              value={newListTitle}
+              onChange={(e) => setNewListTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleAddList();
+                if (e.key === 'Escape') {
+                  setNewListTitle('');
+                  setAddingList(false);
+                }
+              }}
+              placeholder="List title..."
+              className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500"
+            />
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => void handleAddList()}
+                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+              >
+                Add list
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewListTitle('');
+                  setAddingList(false);
+                }}
+                className="px-2 py-1 text-gray-600 text-xs hover:bg-gray-200 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAddingList(true)}
+            className="shrink-0 w-64 p-3 bg-gray-100 rounded-lg text-sm text-gray-500 hover:bg-gray-200 text-left"
+          >
+            + Add list
+          </button>
+        )}
       </div>
     </DragDropContext>
   );
