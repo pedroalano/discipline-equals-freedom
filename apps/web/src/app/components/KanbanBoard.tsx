@@ -139,11 +139,15 @@ export function KanbanBoard({ initialData }: Props) {
   }
 
   async function handleCardUpdate(cardId: string, data: { title?: string; description?: string }) {
-    await fetch(`/api/cards/${cardId}`, {
+    const res = await fetch(`/api/cards/${cardId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (res.ok) {
+      const card = (await res.json()) as CardResponse;
+      applyCardUpdated(card);
+    }
   }
 
   async function handleCardDelete(cardId: string) {
@@ -152,11 +156,15 @@ export function KanbanBoard({ initialData }: Props) {
   }
 
   async function handleCardCreate(listId: string, title: string) {
-    await fetch('/api/cards', {
+    const res = await fetch('/api/cards', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listId, title }),
     });
+    if (res.ok) {
+      const card = (await res.json()) as CardResponse;
+      applyCardCreated(card);
+    }
   }
 
   async function handleListDelete(listId: string) {
