@@ -53,6 +53,83 @@ export interface FocusItemResponse {
   createdAt: string;
 }
 
+// ── Board ─────────────────────────────────────────────────────────────────────
+
+export interface CreateBoardRequest {
+  title: string;
+}
+export interface UpdateBoardRequest {
+  title: string;
+}
+export interface BoardSummaryResponse {
+  id: string;
+  userId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface BoardDetailResponse extends BoardSummaryResponse {
+  lists: ListResponse[];
+}
+
+// ── List ──────────────────────────────────────────────────────────────────────
+
+export interface CreateListRequest {
+  title: string;
+  boardId: string;
+}
+export interface UpdateListRequest {
+  title?: string;
+  position?: number;
+}
+export interface ListResponse {
+  id: string;
+  boardId: string;
+  title: string;
+  position: number;
+  createdAt: string;
+  cards: CardResponse[];
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+
+export interface CreateCardRequest {
+  title: string;
+  listId: string;
+}
+export interface UpdateCardRequest {
+  title?: string;
+  description?: string;
+}
+export interface MoveCardRequest {
+  listId: string;
+  position: number;
+}
+export interface CardResponse {
+  id: string;
+  listId: string;
+  title: string;
+  description: string | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── WebSocket events (server → client) ───────────────────────────────────────
+
+export interface CardMovedEvent {
+  card: CardResponse;
+}
+export interface CardUpdatedEvent {
+  card: CardResponse;
+}
+export interface CardCreatedEvent {
+  card: CardResponse;
+}
+export interface CardDeletedEvent {
+  cardId: string;
+}
+
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
@@ -69,6 +146,10 @@ export const createFocusItemSchema = z.object({
   text: z.string().min(1, 'Text is required').max(500, 'Text too long'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
 });
+
+export const createBoardSchema = z.object({ title: z.string().min(1).max(100) });
+export const createListSchema = z.object({ title: z.string().min(1).max(100) });
+export const createCardSchema = z.object({ title: z.string().min(1).max(200) });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;

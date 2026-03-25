@@ -30,13 +30,17 @@
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "@nestjs/websockets": "^11.1.17",
+    "@nestjs/platform-socket.io": "^11.1.17",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.17",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
     "@types/passport-jwt": "^4.0.1",

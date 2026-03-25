@@ -9,6 +9,9 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { FocusModule } from './focus/focus.module';
 import { DailyImageModule } from './daily-image/daily-image.module';
+import { BoardModule } from './board/board.module';
+import { ListModule } from './list/list.module';
+import { CardModule } from './card/card.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -21,6 +24,9 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     UsersModule,
     FocusModule,
     DailyImageModule,
+    BoardModule,
+    ListModule,
+    CardModule,
   ],
   controllers: [HealthController],
   providers: [
