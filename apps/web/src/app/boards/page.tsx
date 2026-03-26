@@ -14,8 +14,18 @@ const GRADIENTS = [
   'from-violet-500 to-purple-700',
 ];
 
-function boardGradient(id: string): string {
-  const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+const COLOR_MAP: Record<string, string> = {
+  indigo: 'from-indigo-500 to-purple-600',
+  rose: 'from-rose-500 to-pink-600',
+  amber: 'from-amber-500 to-orange-500',
+  emerald: 'from-emerald-500 to-teal-600',
+  sky: 'from-sky-500 to-blue-600',
+  violet: 'from-violet-500 to-purple-700',
+};
+
+function boardGradient(board: BoardSummaryResponse): string {
+  if (board.color && COLOR_MAP[board.color]) return COLOR_MAP[board.color]!;
+  const hash = board.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
   return GRADIENTS[hash % GRADIENTS.length] ?? GRADIENTS[0]!;
 }
 
@@ -71,7 +81,7 @@ export default async function BoardsPage() {
               href={`/boards/${board.id}`}
               className="block aspect-video relative rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${boardGradient(board.id)}`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${boardGradient(board)}`} />
               <div className="absolute inset-0 bg-black/20" />
               <div className="relative h-full flex flex-col justify-end p-4">
                 <h2 className="font-bold text-lg text-white leading-tight">{board.title}</h2>

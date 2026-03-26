@@ -41,13 +41,15 @@ model FocusItem {
 }
 
 model Board {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lists     List[]
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lists       List[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model List {

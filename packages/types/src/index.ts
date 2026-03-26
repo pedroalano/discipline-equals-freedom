@@ -59,12 +59,16 @@ export interface CreateBoardRequest {
   title: string;
 }
 export interface UpdateBoardRequest {
-  title: string;
+  title?: string;
+  description?: string;
+  color?: string;
 }
 export interface BoardSummaryResponse {
   id: string;
   userId: string;
   title: string;
+  description: string | null;
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }
