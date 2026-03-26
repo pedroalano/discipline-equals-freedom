@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Phase 0 complete. Monorepo scaffold is in place. Run `pnpm install` once on the host to generate `pnpm-lock.yaml`, then use Docker for all app processes.
+Phases 0, 1, and 2 complete. Auth + Zen Core MVP and Kanban Engine are fully implemented. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
 
 ## Monorepo Structure
 
@@ -93,7 +93,4 @@ WebSockets (Socket.io) are scoped to board card sync only — not used for focus
 
 Before implementing the relevant phase, resolve these and document each as an ADR in `docs/decisions/`:
 
-- **Card position storage:** fractional indexing vs. integer rank + rebalance
-- **Next.js auth strategy:** next-auth v5 vs. custom JWT cookie
-- **WebSocket auth:** token in handshake query vs. cookie
-- **Analytics storage (Phase 3):** PostgreSQL aggregates vs. TimescaleDB
+- **Analytics storage (Phase 3):** PostgreSQL aggregates vs. TimescaleDB — Defer to Phase 3; resolve before Phase 3 begins

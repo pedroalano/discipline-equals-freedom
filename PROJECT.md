@@ -92,13 +92,13 @@ Card           → id, listId, title, description, position, updatedAt
 
 ### Phase 0: Foundation (prerequisite to all phases)
 
-- [ ] Initialize monorepo with pnpm workspaces + Turborepo
-- [ ] Scaffold `apps/web` (Next.js), `apps/api` (NestJS), `packages/types`, `packages/config`
-- [ ] Configure shared ESLint (Airbnb-TS), Prettier, `tsconfig` base
-- [ ] Set up Docker Compose (PostgreSQL + Redis)
-- [ ] Initialize Prisma schema with `User`, `RefreshToken`, `FocusItem`, `Board`, `List`, `Card` models
-- [ ] GitHub Actions CI pipeline: lint → typecheck → test
-- [ ] Configure Husky + lint-staged (pre-commit: lint + typecheck)
+- [x] Initialize monorepo with pnpm workspaces + Turborepo
+- [x] Scaffold `apps/web` (Next.js), `apps/api` (NestJS), `packages/types`, `packages/config`
+- [x] Configure shared ESLint (Airbnb-TS), Prettier, `tsconfig` base
+- [x] Set up Docker Compose (PostgreSQL + Redis)
+- [x] Initialize Prisma schema with `User`, `RefreshToken`, `FocusItem`, `Board`, `List`, `Card` models
+- [x] GitHub Actions CI pipeline: lint → typecheck → test
+- [x] Configure Husky + lint-staged (pre-commit: lint + typecheck)
 
 **Exit criteria:** `pnpm turbo run build lint typecheck test` passes on a clean clone.
 
@@ -106,12 +106,12 @@ Card           → id, listId, title, description, position, updatedAt
 
 ### Phase 1: Auth + Zen Core (MVP)
 
-- [ ] Auth module: register, login, logout, refresh token rotation
-- [ ] JWT guard applied globally; public decorator for unauthenticated routes
-- [ ] Daily Image: Unsplash API integration with server-side caching (avoid per-user rate limits)
-- [ ] Clock & Greeting: typography-first, timezone-aware, SSR-rendered
-- [ ] FocusItem CRUD: create today's focus, mark complete, persist per user per day
-- [ ] Protected Next.js routes with session (next-auth or custom JWT cookie strategy)
+- [x] Auth module: register, login, logout, refresh token rotation
+- [x] JWT guard applied globally; public decorator for unauthenticated routes
+- [x] Daily Image: Unsplash API integration with server-side caching (avoid per-user rate limits)
+- [x] Clock & Greeting: typography-first, timezone-aware, SSR-rendered
+- [x] FocusItem CRUD: create today's focus, mark complete, persist per user per day
+- [x] Protected Next.js routes with session (next-auth or custom JWT cookie strategy)
 
 **Exit criteria:** A user can register, log in, set a daily focus item, and see it persist on page refresh. Auth tokens rotate correctly. Unsplash image loads from cache on repeat visits.
 
@@ -119,12 +119,12 @@ Card           → id, listId, title, description, position, updatedAt
 
 ### Phase 2: Kanban Engine
 
-- [ ] Board, List, Card CRUD (NestJS REST endpoints)
-- [ ] Drag-and-drop UI with `@hello-pangea/dnd`; optimistic updates on client
-- [ ] Position reordering: store fractional index or integer rank; recalculate on conflicts
-- [ ] Real-time card sync via Socket.io: broadcast card moves/edits to other tabs/clients in the same board room
-- [ ] Conflict resolution strategy: last-write-wins with server timestamp (document this decision)
-- [ ] Playwright E2E: create board → add card → drag card → verify persistence
+- [x] Board, List, Card CRUD (NestJS REST endpoints)
+- [x] Drag-and-drop UI with `@hello-pangea/dnd`; optimistic updates on client
+- [x] Position reordering: store fractional index or integer rank; recalculate on conflicts
+- [x] Real-time card sync via Socket.io: broadcast card moves/edits to other tabs/clients in the same board room
+- [x] Conflict resolution strategy: last-write-wins with server timestamp (document this decision)
+- [x] Playwright E2E: create board → add card → drag card → verify persistence
 
 **Exit criteria:** Two browser tabs open on the same board show card moves in real-time. Drag-and-drop order persists on hard refresh.
 
@@ -182,11 +182,11 @@ Card           → id, listId, title, description, position, updatedAt
 
 ## Open Decisions (ADR Candidates)
 
-| Decision              | Options                                                       | Status           |
-| --------------------- | ------------------------------------------------------------- | ---------------- |
-| Card position storage | Fractional indexing vs. integer rank + rebalance              | Undecided        |
-| Next.js auth strategy | next-auth v5 vs. custom JWT cookie                            | Undecided        |
-| WebSocket auth        | Token in handshake query vs. cookie                           | Undecided        |
-| Analytics storage     | PostgreSQL aggregates vs. dedicated time-series (TimescaleDB) | Defer to Phase 3 |
+| Decision              | Options                                                       | Status             |
+| --------------------- | ------------------------------------------------------------- | ------------------ |
+| Card position storage | Fractional indexing vs. integer rank + rebalance              | Resolved (ADR 002) |
+| Next.js auth strategy | next-auth v5 vs. custom JWT cookie                            | Resolved (ADR 001) |
+| WebSocket auth        | Token in handshake query vs. cookie                           | Resolved (ADR 003) |
+| Analytics storage     | PostgreSQL aggregates vs. dedicated time-series (TimescaleDB) | Defer to Phase 3   |
 
 > Each decision should be resolved before the phase that depends on it begins, and documented as an ADR in `docs/decisions/`.

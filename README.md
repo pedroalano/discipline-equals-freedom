@@ -84,9 +84,9 @@ pnpm turbo run lint typecheck
 
 ## Development roadmap
 
-| Phase | Focus                                                          | Status      |
-| ----- | -------------------------------------------------------------- | ----------- |
-| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI       | In progress |
-| 1     | Auth, daily focus items, Unsplash background, protected routes | Planned     |
-| 2     | Kanban board, drag-and-drop, real-time card sync               | Planned     |
-| 3     | PWA, Chrome Extension, analytics                               | Planned     |
+| Phase | Focus                                                          | Status   |
+| ----- | -------------------------------------------------------------- | -------- |
+| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI       | Complete |
+| 1     | Auth, daily focus items, Unsplash background, protected routes | Complete |
+| 2     | Kanban board, drag-and-drop, real-time card sync               | Complete |
+| 3     | PWA, Chrome Extension, analytics                               | Planned  |
