@@ -57,7 +57,11 @@ export class BoardService {
 
     const updated = await this.prisma.board.update({
       where: { id: boardId },
-      data: { title: dto.title },
+      data: {
+        ...(dto.title !== undefined && { title: dto.title }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.color !== undefined && { color: dto.color }),
+      },
     });
     return this.formatSummary(updated);
   }
@@ -75,6 +79,8 @@ export class BoardService {
       id: board.id,
       userId: board.userId,
       title: board.title,
+      description: board.description,
+      color: board.color,
       createdAt: board.createdAt.toISOString(),
       updatedAt: board.updatedAt.toISOString(),
     };

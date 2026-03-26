@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { BoardDetailResponse } from '@zenfocus/types';
 import { KanbanBoard } from '../../components/KanbanBoard';
+import { BoardSettingsButton } from '../../components/BoardSettingsButton';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
@@ -34,7 +35,8 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
           ← Boards
         </Link>
         <span className="text-slate-600 text-sm">/</span>
-        <h1 className="text-xl font-bold text-white truncate">{board.title}</h1>
+        <h1 className="text-xl font-bold text-white truncate flex-1">{board.title}</h1>
+        <BoardSettingsButton board={board} />
       </header>
       <div className="flex-1 overflow-x-auto">
         <KanbanBoard initialData={board} />
