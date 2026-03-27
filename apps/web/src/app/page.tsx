@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
@@ -34,6 +35,15 @@ export default async function DashboardPage() {
         <ClockGreeting />
         <FocusPanel />
       </div>
+
+      <nav className="absolute top-4 left-4 z-10 flex gap-4">
+        <Link href="/today" className="text-xs text-white/40 hover:text-white/70 transition">
+          Today
+        </Link>
+        <Link href="/boards" className="text-xs text-white/40 hover:text-white/70 transition">
+          Boards
+        </Link>
+      </nav>
 
       {photo && (
         <a

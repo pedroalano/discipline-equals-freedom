@@ -110,8 +110,13 @@ export class CardService {
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    const lastFocus = await this.prisma.focusItem.findFirst({
+      where: { userId, date: today },
+      orderBy: { position: 'desc' },
+    });
+    const focusPosition = lastFocus ? lastFocus.position + 1 : 0;
     const focusItem = await this.prisma.focusItem.create({
-      data: { userId, text: card.title, date: today },
+      data: { userId, text: card.title, date: today, position: focusPosition },
     });
 
     const updated = await this.prisma.card.update({

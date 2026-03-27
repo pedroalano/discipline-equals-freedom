@@ -14,7 +14,7 @@ import { FocusService } from './focus.service';
 import { CreateFocusItemDto } from './dto/create-focus-item.dto';
 import { UpdateFocusItemDto } from './dto/update-focus-item.dto';
 import { CurrentUser, type RequestUser } from '../auth/decorators/current-user.decorator';
-import type { FocusItemResponse } from '@zenfocus/types';
+import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 
 @Controller('focus')
 export class FocusController {
@@ -24,7 +24,7 @@ export class FocusController {
   getByDate(
     @CurrentUser() user: RequestUser,
     @Query('date') date: string,
-  ): Promise<FocusItemResponse[]> {
+  ): Promise<FocusItemListResponse> {
     return this.focus.getByDate(user.id, date);
   }
 
