@@ -140,6 +140,13 @@ export function KanbanBoard({ initialData }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listId: destination.droppableId, position: newPosition }),
       });
+      if (movedCard.isToday && movedCard.focusItemId && destList.title.toLowerCase() === 'done') {
+        await fetch(`/api/focus/${movedCard.focusItemId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: true }),
+        });
+      }
     } catch {
       // Revert on error
       applyCardMoved(movedCard);

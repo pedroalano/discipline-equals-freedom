@@ -117,6 +117,7 @@ export interface CardResponse {
   description: string | null;
   position: number;
   isToday: boolean;
+  focusItemId: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -108,15 +108,15 @@ export class CardService {
     if (!card) throw new NotFoundException('Card not found');
     if (card.list.board.userId !== userId) throw new ForbiddenException();
 
-    const updated = await this.prisma.card.update({
-      where: { id: cardId },
-      data: { isToday: true },
-    });
-
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    await this.prisma.focusItem.create({
+    const focusItem = await this.prisma.focusItem.create({
       data: { userId, text: card.title, date: today },
+    });
+
+    const updated = await this.prisma.card.update({
+      where: { id: cardId },
+      data: { isToday: true, focusItemId: focusItem.id },
     });
 
     const response = this.format(updated);
@@ -132,6 +132,7 @@ export class CardService {
       description: card.description,
       position: card.position,
       isToday: card.isToday,
+      focusItemId: card.focusItemId,
       createdAt: card.createdAt.toISOString(),
       updatedAt: card.updatedAt.toISOString(),
     };
