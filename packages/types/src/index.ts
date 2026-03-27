@@ -42,6 +42,7 @@ export interface CreateFocusItemRequest {
 export interface UpdateFocusItemRequest {
   text?: string;
   completed?: boolean;
+  position?: number;
 }
 
 export interface FocusItemResponse {
@@ -50,7 +51,14 @@ export interface FocusItemResponse {
   text: string;
   date: string; // YYYY-MM-DD
   completed: boolean;
+  position: number;
   createdAt: string;
+}
+
+export interface FocusItemListResponse {
+  items: FocusItemResponse[];
+  total: number;
+  completed: number;
 }
 
 // ── Board ─────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { BoardGateway } from '../board/board.gateway';
 import type { CreateFocusItemDto } from './dto/create-focus-item.dto';
 import type { UpdateFocusItemDto } from './dto/update-focus-item.dto';
-import type { CardResponse, FocusItemResponse } from '@zenfocus/types';
+import type { CardResponse, FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import type { Card, FocusItem } from '@prisma/client';
 
 @Injectable()
@@ -13,17 +13,61 @@ export class FocusService {
     private readonly gateway: BoardGateway,
   ) {}
 
-  async getByDate(userId: string, date: string): Promise<FocusItemResponse[]> {
-    const items = await this.prisma.focusItem.findMany({
-      where: { userId, date: new Date(date) },
-      orderBy: { createdAt: 'asc' },
+  async getByDate(userId: string, dateStr: string): Promise<FocusItemListResponse> {
+    const dayDate = new Date(dateStr + 'T00:00:00.000Z');
+
+    let items = await this.prisma.focusItem.findMany({
+      where: { userId, date: dayDate },
+      orderBy: { position: 'asc' },
     });
-    return items.map(this.format);
+
+    // Carry-over: when today has no items, bring forward yesterday's incomplete items
+    const todayStr = new Date().toISOString().substring(0, 10);
+    if (items.length === 0 && dateStr === todayStr) {
+      const yesterday = new Date(dayDate);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+      const incomplete = await this.prisma.focusItem.findMany({
+        where: { userId, date: yesterday, completed: false },
+        orderBy: { position: 'asc' },
+      });
+
+      if (incomplete.length > 0) {
+        await this.prisma.focusItem.createMany({
+          data: incomplete.map((item, idx) => ({
+            userId,
+            text: item.text,
+            date: dayDate,
+            completed: false,
+            position: idx,
+          })),
+        });
+
+        items = await this.prisma.focusItem.findMany({
+          where: { userId, date: dayDate },
+          orderBy: { position: 'asc' },
+        });
+      }
+    }
+
+    const formatted = items.map((item) => this.format(item));
+    return {
+      items: formatted,
+      total: formatted.length,
+      completed: formatted.filter((i) => i.completed).length,
+    };
   }
 
   async create(userId: string, dto: CreateFocusItemDto): Promise<FocusItemResponse> {
+    const dayDate = new Date(dto.date + 'T00:00:00.000Z');
+    const last = await this.prisma.focusItem.findFirst({
+      where: { userId, date: dayDate },
+      orderBy: { position: 'desc' },
+    });
+    const position = last ? last.position + 1 : 0;
+
     const item = await this.prisma.focusItem.create({
-      data: { userId, text: dto.text, date: new Date(dto.date) },
+      data: { userId, text: dto.text, date: dayDate, position },
     });
     return this.format(item);
   }
@@ -38,6 +82,7 @@ export class FocusService {
       data: {
         ...(dto.text !== undefined && { text: dto.text }),
         ...(dto.completed !== undefined && { completed: dto.completed }),
+        ...(dto.position !== undefined && { position: dto.position }),
       },
     });
 
@@ -103,6 +148,7 @@ export class FocusService {
       text: item.text,
       date: item.date.toISOString().substring(0, 10),
       completed: item.completed,
+      position: item.position,
       createdAt: item.createdAt.toISOString(),
     };
   }

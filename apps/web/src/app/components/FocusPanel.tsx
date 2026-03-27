@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import type { FocusItemResponse } from '@zenfocus/types';
+import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 
 function todayISO(): string {
   return new Date().toISOString().substring(0, 10);
@@ -12,7 +12,9 @@ function todayISO(): string {
 async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
   const res = await fetch(`/api/focus?date=${date}`);
   if (!res.ok) throw new Error('Failed to fetch focus items');
-  return res.json() as Promise<FocusItemResponse[]>;
+  const raw = (await res.json()) as unknown;
+  if (Array.isArray(raw)) return raw as FocusItemResponse[];
+  return ((raw as FocusItemListResponse).items ?? []) as FocusItemResponse[];
 }
 
 export function FocusPanel() {
@@ -22,10 +24,13 @@ export function FocusPanel() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['focus', date],
     queryFn: () => fetchFocusItems(date),
   });
+  const items: FocusItemResponse[] = Array.isArray(data)
+    ? data
+    : ((data as FocusItemListResponse | undefined)?.items ?? []);
 
   const createMutation = useMutation({
     mutationFn: async (itemText: string) => {

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "FocusItem" ADD COLUMN     "position" DOUBLE PRECISION NOT NULL DEFAULT 0;

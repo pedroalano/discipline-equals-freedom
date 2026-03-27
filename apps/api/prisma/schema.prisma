@@ -36,6 +36,7 @@ model FocusItem {
   text      String
   date      DateTime @db.Date
   completed Boolean  @default(false)
+  position  Float    @default(0)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
