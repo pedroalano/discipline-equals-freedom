@@ -11,6 +11,7 @@ import type {
   CardResponse,
   CardUpdatedEvent,
   ListResponse,
+  MoveToTodayResponse,
 } from '@zenfocus/types';
 import { KanbanList } from './KanbanList';
 import { useBoardUIStore } from '../../store/board';
@@ -31,6 +32,7 @@ export function KanbanBoard({ initialData }: Props) {
   );
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
+  const [doneCount, setDoneCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
 
@@ -128,6 +130,10 @@ export function KanbanBoard({ initialData }: Props) {
     };
     applyCardMoved(optimistic);
 
+    if (destList.title.toLowerCase() === 'done') {
+      setDoneCount((n) => n + 1);
+    }
+
     try {
       await fetch(`/api/cards/${draggableId}/move`, {
         method: 'PATCH',
@@ -174,6 +180,26 @@ export function KanbanBoard({ initialData }: Props) {
     await fetch(`/api/lists/${listId}`, { method: 'DELETE' });
   }
 
+  async function handleListUpdate(listId: string, data: { title: string }) {
+    const res = await fetch(`/api/lists/${listId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      const updated = (await res.json()) as ListResponse;
+      setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, title: updated.title } : l)));
+    }
+  }
+
+  async function handleMoveToToday(cardId: string) {
+    const res = await fetch(`/api/cards/${cardId}/move-to-today`, { method: 'POST' });
+    if (res.ok) {
+      const { card } = (await res.json()) as MoveToTodayResponse;
+      applyCardUpdated(card);
+    }
+  }
+
   async function handleAddList() {
     const trimmed = newListTitle.trim();
     if (!trimmed) return;
@@ -195,7 +221,12 @@ export function KanbanBoard({ initialData }: Props) {
       onDragStart={(start) => setDragging(start.draggableId)}
       onDragEnd={(result) => void handleDragEnd(result)}
     >
-      <div className="flex gap-4 p-6 h-full items-start bg-slate-100">
+      <div className="relative flex gap-4 p-6 h-full items-start bg-slate-100">
+        {doneCount > 0 && (
+          <div className="absolute top-3 right-6 bg-emerald-100 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+            ✓ {doneCount} done this session
+          </div>
+        )}
         {lists.map((list) => (
           <KanbanList
             key={list.id}
@@ -204,6 +235,8 @@ export function KanbanBoard({ initialData }: Props) {
             onCardDelete={handleCardDelete}
             onCardCreate={handleCardCreate}
             onListDelete={handleListDelete}
+            onListUpdate={handleListUpdate}
+            onMoveToToday={handleMoveToToday}
           />
         ))}
         {addingList ? (

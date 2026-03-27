@@ -104,6 +104,7 @@ export interface CreateCardRequest {
 export interface UpdateCardRequest {
   title?: string;
   description?: string;
+  isToday?: boolean;
 }
 export interface MoveCardRequest {
   listId: string;
@@ -115,8 +116,13 @@ export interface CardResponse {
   title: string;
   description: string | null;
   position: number;
+  isToday: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MoveToTodayResponse {
+  card: CardResponse;
 }
 
 // ── WebSocket events (server → client) ───────────────────────────────────────

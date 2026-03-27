@@ -56,6 +56,7 @@ export class CardService {
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.isToday !== undefined && { isToday: dto.isToday }),
       },
     });
     const response = this.format(updated);
@@ -99,6 +100,30 @@ export class CardService {
     this.gateway.emitCardDeleted(card.list.board.id, cardId);
   }
 
+  async moveToToday(userId: string, cardId: string): Promise<{ card: CardResponse }> {
+    const card = await this.prisma.card.findUnique({
+      where: { id: cardId },
+      include: { list: { include: { board: true } } },
+    });
+    if (!card) throw new NotFoundException('Card not found');
+    if (card.list.board.userId !== userId) throw new ForbiddenException();
+
+    const updated = await this.prisma.card.update({
+      where: { id: cardId },
+      data: { isToday: true },
+    });
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    await this.prisma.focusItem.create({
+      data: { userId, text: card.title, date: today },
+    });
+
+    const response = this.format(updated);
+    this.gateway.emitCardUpdated(card.list.board.id, response);
+    return { card: response };
+  }
+
   private format(card: Card): CardResponse {
     return {
       id: card.id,
@@ -106,6 +131,7 @@ export class CardService {
       title: card.title,
       description: card.description,
       position: card.position,
+      isToday: card.isToday,
       createdAt: card.createdAt.toISOString(),
       updatedAt: card.updatedAt.toISOString(),
     };

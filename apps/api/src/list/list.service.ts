@@ -82,6 +82,7 @@ export class ListService {
       title: card.title,
       description: card.description,
       position: card.position,
+      isToday: card.isToday,
       createdAt: card.createdAt.toISOString(),
       updatedAt: card.updatedAt.toISOString(),
     };
