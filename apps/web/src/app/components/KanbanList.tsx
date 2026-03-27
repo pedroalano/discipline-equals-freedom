@@ -26,6 +26,8 @@ interface Props {
   onCardDelete: (cardId: string) => Promise<void>;
   onCardCreate: (listId: string, title: string) => Promise<void>;
   onListDelete: (listId: string) => Promise<void>;
+  onListUpdate: (listId: string, data: { title: string }) => Promise<void>;
+  onMoveToToday: (cardId: string) => Promise<void>;
 }
 
 export function KanbanList({
@@ -34,9 +36,13 @@ export function KanbanList({
   onCardDelete,
   onCardCreate,
   onListDelete,
+  onListUpdate,
+  onMoveToToday,
 }: Props) {
   const [addingCard, setAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(list.title);
   const shouldReduceMotion = useReducedMotion();
 
   const sortedCards = [...list.cards].sort(
@@ -56,19 +62,50 @@ export function KanbanList({
     void onListDelete(list.id);
   }
 
+  async function handleTitleSubmit() {
+    const trimmed = titleValue.trim();
+    if (!trimmed || trimmed === list.title) {
+      setTitleValue(list.title);
+      setEditingTitle(false);
+      return;
+    }
+    await onListUpdate(list.id, { title: trimmed });
+    setEditingTitle(false);
+  }
+
   return (
     <div
       className={`flex flex-col w-72 shrink-0 bg-white shadow-md rounded-2xl p-3 gap-2 border-t-4 ${listAccent(list.id)}`}
     >
       <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-1">
-        <h3 className="font-bold text-base">
-          {list.title}
-          <span className="text-xs text-gray-400 ml-1 font-normal">({list.cards.length})</span>
-        </h3>
+        {editingTitle ? (
+          <input
+            autoFocus
+            value={titleValue}
+            onChange={(e) => setTitleValue(e.target.value)}
+            onBlur={() => void handleTitleSubmit()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleTitleSubmit();
+              if (e.key === 'Escape') {
+                setTitleValue(list.title);
+                setEditingTitle(false);
+              }
+            }}
+            className="font-bold text-base border-b border-blue-500 outline-none flex-1 mr-2"
+          />
+        ) : (
+          <h3
+            className="font-bold text-base cursor-pointer hover:text-blue-700 flex-1"
+            onClick={() => setEditingTitle(true)}
+          >
+            {list.title}
+            <span className="text-xs text-gray-400 ml-1 font-normal">({list.cards.length})</span>
+          </h3>
+        )}
         <button
           type="button"
           onClick={handleDeleteList}
-          className="text-gray-400 hover:text-red-500 text-xs"
+          className="text-gray-400 hover:text-red-500 text-xs shrink-0"
           aria-label="Delete list"
         >
           ×
@@ -92,6 +129,7 @@ export function KanbanList({
                   index={index}
                   onUpdate={onCardUpdate}
                   onDelete={onCardDelete}
+                  onMoveToToday={onMoveToToday}
                   shouldReduceMotion={shouldReduceMotion ?? false}
                 />
               ))}

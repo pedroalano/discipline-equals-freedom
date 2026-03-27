@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import type { MoveToTodayResponse } from '@zenfocus/types';
 import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
@@ -31,6 +32,15 @@ export class CardController {
     @Body() dto: MoveCardDto,
   ): Promise<CardResponse> {
     return this.cards.move(user.id, id, dto);
+  }
+
+  @Post(':id/move-to-today')
+  @HttpCode(HttpStatus.OK)
+  moveToToday(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+  ): Promise<MoveToTodayResponse> {
+    return this.cards.moveToToday(user.id, id);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
