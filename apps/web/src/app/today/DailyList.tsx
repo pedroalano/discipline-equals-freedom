@@ -6,7 +6,7 @@ import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 
 interface Props {
   date: string;
-  initialData: FocusItemListResponse;
+  initialData?: FocusItemListResponse;
 }
 
 async function fetchItems(date: string): Promise<FocusItemListResponse> {
@@ -37,12 +37,14 @@ function computeMoveDownPosition(items: FocusItemResponse[], idx: number): numbe
   return nextNext ? (next.position + nextNext.position) / 2 : next.position + 1;
 }
 
+const EMPTY: FocusItemListResponse = { items: [], total: 0, completed: 0 };
+
 export function DailyList({ date, initialData }: Props) {
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data = initialData } = useQuery({
+  const { data = EMPTY } = useQuery({
     queryKey: ['focus', date],
     queryFn: () => fetchItems(date),
     initialData,
