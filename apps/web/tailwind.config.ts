@@ -3,7 +3,11 @@ import type { Config } from 'tailwindcss';
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        cormorant: ['var(--font-cormorant)', 'Georgia', 'serif'],
+      },
+    },
   },
   plugins: [],
 };
