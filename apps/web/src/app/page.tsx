@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CalendarDays, Kanban } from 'lucide-react';
 import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
@@ -37,10 +38,18 @@ export default async function DashboardPage() {
       </div>
 
       <nav className="absolute top-4 left-4 z-10 flex gap-4">
-        <Link href="/today" className="text-xs text-white/40 hover:text-white/70 transition">
+        <Link
+          href="/today"
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition"
+        >
+          <CalendarDays className="w-3 h-3" />
           Today
         </Link>
-        <Link href="/boards" className="text-xs text-white/40 hover:text-white/70 transition">
+        <Link
+          href="/boards"
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition"
+        >
+          <Kanban className="w-3 h-3" />
           Boards
         </Link>
       </nav>
