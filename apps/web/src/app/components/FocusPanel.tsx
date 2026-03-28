@@ -116,12 +116,12 @@ export function FocusPanel() {
             onKeyDown={handleKeyDown}
             placeholder="What's your focus today?"
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-white/20 bg-black/30 px-4 py-3 text-white placeholder-white/40 backdrop-blur outline-none focus:border-white/50"
+            className="flex-1 resize-none border-b border-white/20 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none focus:border-white/50"
           />
           <button
             type="submit"
             disabled={!text.trim() || createMutation.isPending}
-            className="rounded-lg bg-white/20 px-4 py-3 text-white backdrop-blur transition hover:bg-white/30 disabled:opacity-40"
+            className="hidden"
           >
             Add
           </button>
