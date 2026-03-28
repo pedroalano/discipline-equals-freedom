@@ -4,10 +4,7 @@ import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
-
-function todayISO(): string {
-  return new Date().toISOString().substring(0, 10);
-}
+import { localDateISO } from '@/lib/date';
 
 async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
   const res = await fetch(`/api/focus?date=${date}`);
@@ -18,7 +15,7 @@ async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
 }
 
 export function FocusPanel() {
-  const date = todayISO();
+  const date = localDateISO();
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
