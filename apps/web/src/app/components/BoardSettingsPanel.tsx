@@ -24,6 +24,14 @@ export function BoardSettingsPanel({ board, onClose }: BoardSettingsPanelProps) 
   const [description, setDescription] = useState(board.description ?? '');
   const [color, setColor] = useState<string | null>(board.color);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    await fetch(`/api/boards/${board.id}`, { method: 'DELETE' });
+    router.push('/boards');
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -113,7 +121,7 @@ export function BoardSettingsPanel({ board, onClose }: BoardSettingsPanelProps) 
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-200">
+        <div className="px-5 py-4 border-t border-gray-200 space-y-3">
           <button
             type="button"
             onClick={() => void handleSave()}
@@ -122,6 +130,37 @@ export function BoardSettingsPanel({ board, onClose }: BoardSettingsPanelProps) 
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
+
+          {confirmDelete ? (
+            <div className="text-sm space-y-2">
+              <p className="text-gray-700">Are you sure? This cannot be undone.</p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleDelete()}
+                  disabled={deleting}
+                  className="rounded-md bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-sm font-medium px-3 py-1.5 transition-colors"
+                >
+                  {deleting ? 'Deleting…' : 'Yes, delete'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="w-full rounded-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 transition-colors"
+            >
+              Delete board
+            </button>
+          )}
         </div>
       </div>
     </>
