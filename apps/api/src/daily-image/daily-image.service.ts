@@ -5,7 +5,7 @@ import { REDIS_CLIENT } from '../redis/redis.constants';
 import type { DailyImageResponse } from '@zenfocus/types';
 
 interface UnsplashApiResponse {
-  urls: { regular: string };
+  urls: { raw: string };
   user: { name: string; links: { html: string } };
 }
 
@@ -38,7 +38,7 @@ export class DailyImageService {
 
       const data = (await res.json()) as UnsplashApiResponse;
       const image: DailyImageResponse = {
-        url: data.urls.regular,
+        url: `${data.urls.raw}&w=1920&q=85&fm=webp&fit=crop&cs=srgb`,
         author: data.user.name,
         authorUrl: data.user.links.html,
       };
