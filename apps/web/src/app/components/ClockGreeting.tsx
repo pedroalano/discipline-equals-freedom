@@ -22,10 +22,10 @@ export function ClockGreeting() {
   if (!now) {
     return (
       <div className="text-center">
-        <p className="text-7xl font-mono font-thin tracking-widest text-white drop-shadow opacity-0">
+        <p className="text-9xl font-mono font-thin tracking-widest text-white drop-shadow opacity-0">
           00:00
         </p>
-        <p className="mt-2 text-xl font-light text-white/80 drop-shadow opacity-0">Good morning</p>
+        <p className="mt-2 text-4xl font-light text-white/80 drop-shadow opacity-0">Good morning</p>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export function ClockGreeting() {
       <AnimatePresence mode="wait">
         <motion.p
           key={time}
-          className="text-7xl font-mono font-thin tracking-widest text-white drop-shadow"
+          className="text-9xl font-mono font-thin tracking-widest text-white drop-shadow"
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
@@ -50,7 +50,7 @@ export function ClockGreeting() {
           {time}
         </motion.p>
       </AnimatePresence>
-      <p className="mt-2 text-xl font-light text-white/80 drop-shadow">
+      <p className="mt-2 text-4xl font-light text-white/80 drop-shadow">
         {getGreeting(now.getHours())}
       </p>
     </div>

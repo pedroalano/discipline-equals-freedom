@@ -161,7 +161,7 @@ export function FocusPanel() {
                 )}
               </button>
               <span
-                className={`flex-1 text-sm leading-relaxed text-white ${item.completed ? 'line-through opacity-50' : ''}`}
+                className={`flex-1 text-base leading-relaxed text-white ${item.completed ? 'line-through opacity-50' : ''}`}
               >
                 {item.text}
               </span>
@@ -178,7 +178,7 @@ export function FocusPanel() {
       </ul>
 
       {items.length === 0 && !isLoading && (
-        <p className="select-none py-6 text-center text-sm text-white/30">
+        <p className="select-none py-6 text-center text-base text-white/30">
           What matters most today?
         </p>
       )}
