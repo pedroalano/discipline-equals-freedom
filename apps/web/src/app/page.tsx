@@ -40,14 +40,14 @@ export default async function DashboardPage() {
       <nav className="absolute top-4 left-4 z-10 flex gap-4">
         <Link
           href="/today"
-          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition"
+          className="flex items-center gap-1.5 text-sm text-white hover:text-white/80 transition"
         >
           <CalendarDays className="w-3 h-3" />
           Today
         </Link>
         <Link
           href="/boards"
-          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition"
+          className="flex items-center gap-1.5 text-sm text-white hover:text-white/80 transition"
         >
           <Kanban className="w-3 h-3" />
           Boards
