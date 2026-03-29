@@ -16,6 +16,7 @@ export default function RegisterPage() {
 
     const formData = new FormData(e.currentTarget);
     const parsed = registerSchema.safeParse({
+      name: formData.get('name') || undefined,
       email: formData.get('email'),
       password: formData.get('password'),
     });
@@ -69,6 +70,19 @@ export default function RegisterPage() {
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           {error && <p className="rounded bg-red-900/40 px-4 py-2 text-sm text-red-300">{error}</p>}
+
+          <div>
+            <label htmlFor="name" className="mb-1 block text-sm text-neutral-400">
+              Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 outline-none focus:border-neutral-500"
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="mb-1 block text-sm text-neutral-400">
