@@ -9,14 +9,18 @@ function getGreeting(hour: number): string {
   return 'Good evening';
 }
 
-export function ClockGreeting() {
+export function ClockGreeting({ name }: { name?: string }) {
   const [now, setNow] = useState<Date | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    setNow(new Date());
-    const interval = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(interval);
+    const tick = () => setNow(new Date());
+    const timeout = setTimeout(tick, 0);
+    const interval = setInterval(tick, 60_000);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   if (!now) {
@@ -54,6 +58,7 @@ export function ClockGreeting() {
       </AnimatePresence>
       <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white/80 drop-shadow">
         {getGreeting(now.getHours())}
+        {name ? `, ${name}` : ''}
       </p>
     </div>
   );

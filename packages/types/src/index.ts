@@ -3,6 +3,7 @@ import { z } from 'zod';
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export interface RegisterRequest {
+  name?: string;
   email: string;
   password: string;
 }
@@ -15,6 +16,7 @@ export interface LoginRequest {
 export interface UserResponse {
   id: string;
   email: string;
+  name?: string | null;
   createdAt: string;
 }
 
@@ -152,6 +154,7 @@ export interface CardDeletedEvent {
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100).optional(),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });

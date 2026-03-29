@@ -24,9 +24,14 @@ export class AuthService {
     if (existing) throw new ConflictException('Email already in use');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const user = await this.users.create(dto.email, passwordHash);
+    const user = await this.users.create(dto.email, passwordHash, dto.name);
 
-    return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString() };
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt.toISOString(),
+    };
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
@@ -36,7 +41,7 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    return this.generateTokenPair(user.id, user.email, user.createdAt);
+    return this.generateTokenPair(user.id, user.email, user.createdAt, user.name ?? undefined);
   }
 
   async logout(userId: string): Promise<void> {
@@ -78,18 +83,19 @@ export class AuthService {
     const user = await this.users.findById(payload.sub);
     if (!user) throw new UnauthorizedException('User not found');
 
-    return this.generateTokenPair(user.id, user.email, user.createdAt);
+    return this.generateTokenPair(user.id, user.email, user.createdAt, user.name ?? undefined);
   }
 
   private async generateTokenPair(
     userId: string,
     email: string,
     createdAt: Date,
+    name?: string,
   ): Promise<AuthResponse> {
     const tokenId = crypto.randomUUID();
 
     const accessToken = this.jwt.sign(
-      { sub: userId, email },
+      { sub: userId, email, name },
       { secret: this.config.getOrThrow<string>('JWT_SECRET'), expiresIn: '15m' },
     );
 
@@ -104,7 +110,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: userId, email, createdAt: createdAt.toISOString() },
+      user: { id: userId, email, name, createdAt: createdAt.toISOString() },
     };
   }
 }

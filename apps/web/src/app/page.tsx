@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { CalendarDays, Kanban } from 'lucide-react';
+import { decodeJwt } from 'jose';
 import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
@@ -18,8 +20,20 @@ async function getDailyImage(): Promise<DailyImageResponse | null> {
   }
 }
 
+async function getNameFromToken(): Promise<string | undefined> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    if (!token) return undefined;
+    const payload = decodeJwt(token);
+    return typeof payload['name'] === 'string' ? payload['name'] : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default async function DashboardPage() {
-  const photo = await getDailyImage();
+  const [photo, userName] = await Promise.all([getDailyImage(), getNameFromToken()]);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 bg-neutral-900 px-4">
@@ -33,7 +47,7 @@ export default async function DashboardPage() {
       <div className="absolute inset-0 bg-grain" />
 
       <div className="relative z-10 flex flex-col items-center gap-10">
-        <ClockGreeting />
+        <ClockGreeting name={userName} />
         <FocusPanel />
       </div>
 
