@@ -104,16 +104,22 @@ export function FocusPanel() {
 
   return (
     <div className="w-full max-w-md space-y-3">
+      <label
+        htmlFor="focus-input"
+        className="block text-center text-2xl font-cormorant font-bold tracking-wide text-white"
+      >
+        What&apos;s your focus today?
+      </label>
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2">
           <textarea
+            id="focus-input"
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="What's your focus today?"
             rows={1}
-            className="flex-1 resize-none border-b border-white/20 bg-transparent px-4 py-3 text-white placeholder-white/40 outline-none focus:border-white/50"
+            className="flex-1 resize-none border-b border-white/20 bg-transparent px-4 py-3 text-center text-white outline-none focus:border-white/50"
           />
           <button
             type="submit"
