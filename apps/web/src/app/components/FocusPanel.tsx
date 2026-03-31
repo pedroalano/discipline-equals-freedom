@@ -119,7 +119,7 @@ export function FocusPanel() {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
-            className="flex-1 resize-none border-b border-white/20 bg-transparent px-4 py-3 text-center text-white outline-none focus:border-white/50"
+            className="flex-1 resize-none border-b border-white bg-transparent px-4 py-3 text-center text-white outline-none focus:border-white"
           />
           <button
             type="submit"
