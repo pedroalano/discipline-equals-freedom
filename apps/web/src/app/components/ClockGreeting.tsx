@@ -29,7 +29,7 @@ export function ClockGreeting({ name }: { name?: string }) {
         <p className="text-9xl font-cormorant font-thin tracking-widest text-white drop-shadow opacity-0">
           00:00
         </p>
-        <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white/80 drop-shadow opacity-0">
+        <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow opacity-0">
           Good morning
         </p>
       </div>
@@ -56,7 +56,7 @@ export function ClockGreeting({ name }: { name?: string }) {
           {time}
         </motion.p>
       </AnimatePresence>
-      <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white/80 drop-shadow">
+      <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
         {getGreeting(now.getHours())}
         {name ? `, ${name}` : ''}
       </p>
