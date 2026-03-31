@@ -15,11 +15,32 @@ export function ClockGreeting({ name }: { name?: string }) {
 
   useEffect(() => {
     const tick = () => setNow(new Date());
-    const timeout = setTimeout(tick, 0);
-    const interval = setInterval(tick, 60_000);
+
+    // Tick immediately so the clock shows the correct time on mount.
+    tick();
+
+    // Schedule the first tick at the next minute boundary, then repeat every 60 s.
+    const msUntilNextMinute = () => {
+      const now = new Date();
+      return 60_000 - (now.getSeconds() * 1_000 + now.getMilliseconds());
+    };
+
+    let interval: ReturnType<typeof setInterval>;
+    const timeout = setTimeout(() => {
+      tick();
+      interval = setInterval(tick, 60_000);
+    }, msUntilNextMinute());
+
+    // Correct the display immediately when the tab becomes visible again.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tick();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
