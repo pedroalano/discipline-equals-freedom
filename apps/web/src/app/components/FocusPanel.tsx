@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import { localDateISO } from '@/lib/date';
+import { usePomodoroStore } from '../../store/pomodoro';
 
 async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
   const res = await fetch(`/api/focus?date=${date}`);
@@ -15,6 +16,7 @@ async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
 }
 
 export function FocusPanel() {
+  const isPomodoro = usePomodoroStore((s) => s.status !== 'idle');
   const date = localDateISO();
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
@@ -103,7 +105,9 @@ export function FocusPanel() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-3">
+    <div
+      className={`w-full max-w-md space-y-3 transition-opacity duration-500 ${isPomodoro ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+    >
       <label
         htmlFor="focus-input"
         className="block text-center text-2xl font-cormorant font-bold tracking-wide text-white"

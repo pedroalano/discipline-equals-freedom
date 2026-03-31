@@ -1,12 +1,12 @@
-import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { CalendarDays, Kanban } from 'lucide-react';
 import { decodeJwt } from 'jose';
 import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
 import { ImageFader } from './components/ImageFader';
 import { PomodoroIsland } from './components/PomodoroIsland';
+import { NavLinks } from './components/NavLinks';
+import { PhotoAttribution } from './components/PhotoAttribution';
 
 async function getDailyImage(): Promise<DailyImageResponse | null> {
   const apiUrl = process.env['API_INTERNAL_URL'];
@@ -52,35 +52,11 @@ export default async function DashboardPage() {
         <FocusPanel />
       </div>
 
-      <nav className="absolute top-4 left-4 z-10 flex gap-4">
-        <Link
-          href="/today"
-          className="flex items-center gap-1.5 text-sm text-white hover:text-white/80 transition"
-        >
-          <CalendarDays className="w-3 h-3" />
-          Today
-        </Link>
-        <Link
-          href="/boards"
-          className="flex items-center gap-1.5 text-sm text-white hover:text-white/80 transition"
-        >
-          <Kanban className="w-3 h-3" />
-          Boards
-        </Link>
-      </nav>
+      <NavLinks />
 
       <PomodoroIsland />
 
-      {photo && (
-        <a
-          href={photo.authorUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute bottom-3 right-4 z-10 text-xs text-white/40 hover:text-white/70"
-        >
-          Photo by {photo.author} on Unsplash
-        </a>
-      )}
+      {photo && <PhotoAttribution author={photo.author} authorUrl={photo.authorUrl} />}
     </main>
   );
 }
