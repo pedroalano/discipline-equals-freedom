@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { PomodoroButton } from './PomodoroButton';
 
 function getGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -65,18 +66,21 @@ export function ClockGreeting({ name }: { name?: string }) {
 
   return (
     <div className="text-center">
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={time}
-          className="text-9xl font-cormorant font-thin tracking-widest text-white drop-shadow"
-          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
-          transition={{ duration: 0.3 }}
-        >
-          {time}
-        </motion.p>
-      </AnimatePresence>
+      <div className="flex items-center justify-center gap-3">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={time}
+            className="text-9xl font-cormorant font-thin tracking-widest text-white drop-shadow"
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
+            transition={{ duration: 0.3 }}
+          >
+            {time}
+          </motion.p>
+        </AnimatePresence>
+        <PomodoroButton />
+      </div>
       <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
         {getGreeting(now.getHours())}
         {name ? `, ${name}` : ''}
