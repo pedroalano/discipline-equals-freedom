@@ -6,6 +6,7 @@ import type { DailyImageResponse } from '@zenfocus/types';
 import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
 import { ImageFader } from './components/ImageFader';
+import { PomodoroIsland } from './components/PomodoroIsland';
 
 async function getDailyImage(): Promise<DailyImageResponse | null> {
   const apiUrl = process.env['API_INTERNAL_URL'];
@@ -67,6 +68,8 @@ export default async function DashboardPage() {
           Boards
         </Link>
       </nav>
+
+      <PomodoroIsland />
 
       {photo && (
         <a
