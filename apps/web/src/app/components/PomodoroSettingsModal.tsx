@@ -29,7 +29,7 @@ export function PomodoroSettingsModal({ onClose }: Props) {
 
       {/* Modal */}
       <div
-        className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-black/60 p-6 text-white backdrop-blur-md shadow-2xl"
+        className="fixed bottom-20 right-6 z-50 w-80 rounded-2xl border border-white/10 bg-black/60 p-6 text-white backdrop-blur-md shadow-2xl"
         role="dialog"
         aria-label="Pomodoro settings"
       >
