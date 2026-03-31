@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePomodoroStore } from '../../store/pomodoro';
 import { usePomodoroTimer } from '../../hooks/usePomodoroTimer';
 import { useAudioEngine } from '../../hooks/useAudioEngine';
@@ -23,10 +24,26 @@ export function PomodoroIsland() {
   useTabTitle();
   useKeyboardShortcuts();
 
+  const shouldReduceMotion = useReducedMotion();
+  const isActive = status !== 'idle';
   const isRunning = status === 'running';
 
   return (
     <>
+      {/* Focus blur overlay — sits above background image, below all content */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            key="pomodoro-blur"
+            className="fixed inset-0 z-[1] bg-black/50 backdrop-blur-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Bottom-right floating controls */}
       <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-2">
         {/* Live volume slider when sound is playing */}
