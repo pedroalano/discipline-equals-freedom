@@ -67,18 +67,20 @@ export function PomodoroIsland() {
           </div>
         )}
 
-        {/* Settings gear button */}
-        <button
-          type="button"
-          onClick={() => setShowSettings(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/50 backdrop-blur-sm transition-colors hover:text-white"
-          aria-label="Open timer settings"
-        >
-          ⚙
-        </button>
+        {/* Settings gear button — only visible in Pomodoro mode */}
+        {isActive && (
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/50 backdrop-blur-sm transition-colors hover:text-white"
+            aria-label="Open timer settings"
+          >
+            ⚙
+          </button>
+        )}
       </div>
 
-      {showSettings && <PomodoroSettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && isActive && <PomodoroSettingsModal onClose={() => setShowSettings(false)} />}
     </>
   );
 }
