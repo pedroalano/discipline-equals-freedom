@@ -80,13 +80,15 @@ pnpm turbo run lint typecheck
 - **Auth:** Stateless JWT access tokens. Refresh tokens stored as bcrypt hashes in Redis — never plaintext. Enables revocation without stateful sessions.
 - **Real-time:** Socket.io scoped to board card sync only. Conflict resolution is last-write-wins by server timestamp.
 - **Type safety:** `packages/types` is the single source of truth for all network shapes. Both apps import from it; neither defines its own copy.
+- **Pomodoro timer:** Fully client-side — Zustand store with `persist` middleware (localStorage). Tracks work/break sessions, daily count, ambient sounds, and configurable durations with no backend dependency.
 - **Testing:** Unit tests (Jest) on service logic, integration tests (Jest + Supertest) against a real test database, E2E (Playwright) on critical paths.
 
 ## Development roadmap
 
-| Phase | Focus                                                          | Status   |
-| ----- | -------------------------------------------------------------- | -------- |
-| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI       | Complete |
-| 1     | Auth, daily focus items, Unsplash background, protected routes | Complete |
-| 2     | Kanban board, drag-and-drop, real-time card sync               | Complete |
-| 3     | PWA, Chrome Extension, analytics                               | Planned  |
+| Phase | Focus                                                                           | Status   |
+| ----- | ------------------------------------------------------------------------------- | -------- |
+| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI                        | Complete |
+| 1     | Auth, daily focus items, Unsplash background, protected routes                  | Complete |
+| 2     | Kanban board, drag-and-drop, real-time card sync                                | Complete |
+| 2+    | Pomodoro timer, ambient sound engine, session notifications, keyboard shortcuts | Complete |
+| 3     | PWA, Chrome Extension, analytics                                                | Planned  |
