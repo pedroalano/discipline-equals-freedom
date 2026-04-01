@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Phases 0, 1, and 2 complete. Auth + Zen Core MVP and Kanban Engine are fully implemented. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
+Phases 0, 1, and 2 complete, plus Pomodoro timer. Auth + Zen Core MVP, Kanban Engine, and Pomodoro focus timer are fully implemented. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
 
 ## Monorepo Structure
 
@@ -74,6 +74,7 @@ WebSockets (Socket.io) are scoped to board card sync only — not used for focus
 
 - React Server Components handle initial data fetching. Client Components handle real-time surfaces and interactivity.
 - Zustand is for ephemeral client-only state. Server state (boards, cards, focus items) goes through React Query or SWR.
+- The Pomodoro store (`apps/web/src/store/pomodoro.ts`) uses Zustand with `persist` middleware (localStorage). It holds settings, daily count, and daily count date. Runtime timer state is not persisted and resets on load. No backend is involved — see ADR 005.
 - Unsplash API calls are server-side only — the API key must never reach the client bundle.
 
 ### Testing layers
