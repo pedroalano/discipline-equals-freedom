@@ -17,9 +17,10 @@ export class BoardService {
   async findAll(userId: string): Promise<BoardSummaryResponse[]> {
     const boards = await this.prisma.board.findMany({
       where: { userId },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { updatedAt: 'desc' },
+      include: { _count: { select: { lists: true } } },
     });
-    return boards.map(this.formatSummary);
+    return boards.map((b) => ({ ...this.formatSummary(b), listCount: b._count.lists }));
   }
 
   async findOne(userId: string, boardId: string): Promise<BoardDetailResponse> {

@@ -81,6 +81,7 @@ export interface BoardSummaryResponse {
   color: string | null;
   createdAt: string;
   updatedAt: string;
+  listCount: number;
 }
 export interface BoardDetailResponse extends BoardSummaryResponse {
   lists: ListResponse[];
