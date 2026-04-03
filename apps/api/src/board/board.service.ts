@@ -20,7 +20,7 @@ export class BoardService {
       orderBy: { updatedAt: 'desc' },
       include: { _count: { select: { lists: true } } },
     });
-    return boards.map((b) => ({ ...this.formatSummary(b), listCount: b._count.lists }));
+    return boards.map((b) => this.formatSummary(b, b._count.lists));
   }
 
   async findOne(userId: string, boardId: string): Promise<BoardDetailResponse> {
@@ -43,8 +43,9 @@ export class BoardService {
   async create(userId: string, dto: CreateBoardDto): Promise<BoardSummaryResponse> {
     const board = await this.prisma.board.create({
       data: { userId, title: dto.title },
+      include: { _count: { select: { lists: true } } },
     });
-    return this.formatSummary(board);
+    return this.formatSummary(board, board._count.lists);
   }
 
   async update(
@@ -63,8 +64,9 @@ export class BoardService {
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.color !== undefined && { color: dto.color }),
       },
+      include: { _count: { select: { lists: true } } },
     });
-    return this.formatSummary(updated);
+    return this.formatSummary(updated, updated._count.lists);
   }
 
   async delete(userId: string, boardId: string): Promise<void> {
@@ -75,7 +77,7 @@ export class BoardService {
     await this.prisma.board.delete({ where: { id: boardId } });
   }
 
-  private formatSummary(board: Board): BoardSummaryResponse {
+  private formatSummary(board: Board, listCount: number): BoardSummaryResponse {
     return {
       id: board.id,
       userId: board.userId,
@@ -84,6 +86,7 @@ export class BoardService {
       color: board.color,
       createdAt: board.createdAt.toISOString(),
       updatedAt: board.updatedAt.toISOString(),
+      listCount,
     };
   }
 
@@ -91,7 +94,7 @@ export class BoardService {
     board: Board & { lists: (List & { cards: Card[] })[] },
   ): BoardDetailResponse {
     return {
-      ...this.formatSummary(board),
+      ...this.formatSummary(board, board.lists.length),
       lists: board.lists.map((list) => this.formatList(list)),
     };
   }
