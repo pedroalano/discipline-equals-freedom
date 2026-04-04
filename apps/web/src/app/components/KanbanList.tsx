@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Droppable } from '@hello-pangea/dnd';
+import { Droppable, type DraggableProvided } from '@hello-pangea/dnd';
 import { AnimatePresence, useReducedMotion } from 'framer-motion';
 import { KanbanCard } from './KanbanCard';
 import type { CardResponse, ListResponse } from '@zenfocus/types';
@@ -28,6 +28,7 @@ interface Props {
   onListDelete: (listId: string) => Promise<void>;
   onListUpdate: (listId: string, data: { title: string }) => Promise<void>;
   onMoveToToday: (cardId: string) => Promise<void>;
+  dragProvided?: DraggableProvided;
 }
 
 export function KanbanList({
@@ -38,9 +39,12 @@ export function KanbanList({
   onListDelete,
   onListUpdate,
   onMoveToToday,
+  dragProvided,
 }: Props) {
   const [addingCard, setAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeletingList, setIsDeletingList] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(list.title);
   const shouldReduceMotion = useReducedMotion();
@@ -52,14 +56,17 @@ export function KanbanList({
   async function handleAddCard() {
     const trimmed = newCardTitle.trim();
     if (!trimmed) return;
+    setIsCreating(true);
     await onCardCreate(list.id, trimmed);
+    setIsCreating(false);
     setNewCardTitle('');
     setAddingCard(false);
   }
 
-  function handleDeleteList() {
+  async function handleDeleteList() {
     if (!confirm('Delete this list and all its cards?')) return;
-    void onListDelete(list.id);
+    setIsDeletingList(true);
+    await onListDelete(list.id);
   }
 
   async function handleTitleSubmit() {
@@ -75,9 +82,14 @@ export function KanbanList({
 
   return (
     <div
+      ref={dragProvided?.innerRef}
+      {...dragProvided?.draggableProps}
       className={`flex flex-col w-72 shrink-0 bg-white shadow-md rounded-2xl p-3 gap-2 border-t-4 ${listAccent(list.id)}`}
     >
-      <div className="flex items-center justify-between border-b border-gray-200 pb-2 mb-1">
+      <div
+        {...dragProvided?.dragHandleProps}
+        className={`flex items-center justify-between border-b border-gray-200 pb-2 mb-1 ${dragProvided ? 'cursor-grab active:cursor-grabbing' : ''} ${editingTitle ? 'bg-blue-50 -mx-3 px-3 pt-1 rounded-t-xl' : ''}`}
+      >
         {editingTitle ? (
           <input
             autoFocus
@@ -104,11 +116,12 @@ export function KanbanList({
         )}
         <button
           type="button"
-          onClick={handleDeleteList}
-          className="text-gray-400 hover:text-red-500 text-xs shrink-0"
+          onClick={() => void handleDeleteList()}
+          disabled={isDeletingList}
+          className="text-gray-400 hover:text-red-500 text-xs shrink-0 disabled:opacity-50"
           aria-label="Delete list"
         >
-          ×
+          {isDeletingList ? '…' : '×'}
         </button>
       </div>
 
@@ -117,7 +130,7 @@ export function KanbanList({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex flex-col gap-3 min-h-[4px] rounded transition-colors ${
+            className={`flex flex-col gap-3 min-h-[60px] rounded transition-colors ${
               snapshot.isDraggingOver ? 'bg-blue-100 ring-1 ring-blue-300' : ''
             }`}
           >
@@ -134,6 +147,11 @@ export function KanbanList({
                 />
               ))}
             </AnimatePresence>
+            {sortedCards.length === 0 && !snapshot.isDraggingOver && (
+              <p className="text-xs text-gray-300 text-center py-4 border border-dashed border-gray-200 rounded-lg">
+                Drop cards here
+              </p>
+            )}
             {provided.placeholder}
           </div>
         )}
@@ -143,6 +161,7 @@ export function KanbanList({
         <div className="flex flex-col gap-1">
           <input
             autoFocus
+            disabled={isCreating}
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
             onKeyDown={(e) => {
@@ -153,15 +172,16 @@ export function KanbanList({
               }
             }}
             placeholder="Card title..."
-            className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500"
+            className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500 disabled:opacity-60"
           />
           <div className="flex gap-1">
             <button
               type="button"
               onClick={() => void handleAddCard()}
-              className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+              disabled={isCreating}
+              className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-60"
             >
-              Add
+              {isCreating ? 'Adding…' : 'Add'}
             </button>
             <button
               type="button"

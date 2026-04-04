@@ -28,6 +28,14 @@ function boardGradient(board: BoardSummaryResponse): string {
   return GRADIENTS[hash % GRADIENTS.length] ?? GRADIENTS[0]!;
 }
 
+function relativeTime(date: string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
 const PINNED_KEY = 'zenfocus:pinned-boards';
 
 function loadPinned(): string[] {
@@ -57,6 +65,7 @@ function BoardCardItem({ board, isPinned, onTogglePin }: BoardCardItemProps) {
               {board.description.slice(0, 60)}
             </p>
           )}
+          <p className="text-xs text-white/40 mt-1">{relativeTime(board.updatedAt)}</p>
         </div>
       </Link>
 
@@ -113,8 +122,8 @@ export function BoardsClient({ boards }: BoardsClientProps) {
     ? boards.filter((b) => b.title.toLowerCase().includes(query.toLowerCase()))
     : boards;
 
-  const pinned = isSearching ? [] : filtered.filter((b) => pinnedIds.includes(b.id));
-  const rest = isSearching ? filtered : filtered.filter((b) => !pinnedIds.includes(b.id));
+  const pinned = filtered.filter((b) => pinnedIds.includes(b.id));
+  const rest = filtered.filter((b) => !pinnedIds.includes(b.id));
 
   return (
     <div>
@@ -130,7 +139,7 @@ export function BoardsClient({ boards }: BoardsClientProps) {
       </div>
 
       {/* Pinned section */}
-      {!isSearching && pinned.length > 0 && (
+      {pinned.length > 0 && (
         <div className="mb-6">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Pinned

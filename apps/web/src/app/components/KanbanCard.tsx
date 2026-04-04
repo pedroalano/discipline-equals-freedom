@@ -26,6 +26,7 @@ export function KanbanCard({
   const [title, setTitle] = useState(card.title);
   const [editingDesc, setEditingDesc] = useState(false);
   const [desc, setDesc] = useState(card.description ?? '');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleTitleSubmit() {
     const trimmed = title.trim();
@@ -61,7 +62,9 @@ export function KanbanCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`group relative flex flex-col p-3 bg-white rounded-md shadow-sm transition-all ring-1 ring-inset ${
+            className={`group relative flex flex-col p-3 rounded-md shadow-sm transition-all ring-1 ring-inset ${
+              editing || editingDesc ? 'bg-blue-50' : 'bg-white'
+            } ${isDeleting ? 'opacity-50' : ''} ${
               snapshot.isDragging ? 'opacity-90 shadow-lg rotate-1 ring-gray-300' : ringClass
             }`}
           >
@@ -71,7 +74,7 @@ export function KanbanCard({
               </span>
             )}
             <div className="flex items-start gap-2">
-              <span className="opacity-0 group-hover:opacity-40 text-gray-400 text-xs select-none shrink-0 mt-0.5 cursor-grab">
+              <span className="opacity-20 group-hover:opacity-60 text-gray-400 text-xs select-none shrink-0 mt-0.5 cursor-grab">
                 ⠿
               </span>
               {editing ? (
@@ -87,7 +90,7 @@ export function KanbanCard({
                       setEditing(false);
                     }
                   }}
-                  className="flex-1 text-sm border-b border-blue-500 outline-none"
+                  className="flex-1 min-w-0 text-sm border-b border-blue-500 outline-none bg-transparent"
                 />
               ) : (
                 <span className="flex-1 text-sm cursor-pointer" onClick={() => setEditing(true)}>
@@ -108,8 +111,12 @@ export function KanbanCard({
                 )}
                 <button
                   type="button"
-                  onClick={() => void onDelete(card.id)}
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 text-xs transition-opacity"
+                  onClick={() => {
+                    setIsDeleting(true);
+                    void onDelete(card.id);
+                  }}
+                  disabled={isDeleting}
+                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 text-xs transition-opacity disabled:opacity-50"
                   aria-label="Delete card"
                 >
                   ×
@@ -130,7 +137,7 @@ export function KanbanCard({
                   }
                 }}
                 rows={3}
-                className="mt-2 ml-5 text-xs text-gray-600 border border-blue-400 rounded p-1 outline-none w-full resize-none"
+                className="mt-2 ml-5 text-xs text-gray-600 border border-blue-400 rounded p-1 outline-none resize-none"
               />
             ) : (
               <div
