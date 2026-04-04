@@ -21,17 +21,22 @@ export default async function BoardsPage() {
   const boards = await getBoards();
 
   return (
-    <main className="p-8">
-      <div className="mb-2">
-        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">
+    <main className="min-h-screen flex flex-col bg-slate-100">
+      <header className="px-6 py-4 border-b border-slate-700 bg-slate-800 flex items-center gap-3">
+        <Link
+          href="/"
+          className="text-slate-400 hover:text-white text-sm shrink-0"
+          aria-label="Back to dashboard"
+        >
           ← Dashboard
         </Link>
-      </div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Boards</h1>
+        <span className="text-slate-600 text-sm">/</span>
+        <h1 className="text-xl font-bold text-white flex-1">Boards</h1>
         <BoardCreateButton />
+      </header>
+      <div className="flex-1 p-8">
+        <BoardsClient boards={boards} />
       </div>
-      <BoardsClient boards={boards} />
     </main>
   );
 }
