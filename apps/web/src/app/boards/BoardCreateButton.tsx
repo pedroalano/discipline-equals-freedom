@@ -40,7 +40,7 @@ export function BoardCreateButton() {
             if (e.key === 'Escape') handleCancel();
           }}
           placeholder="Board title..."
-          className="text-sm px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 w-48"
+          className="text-sm px-3 py-2 border border-slate-600 bg-slate-700 text-white placeholder-slate-400 rounded-lg outline-none focus:border-blue-400 w-48"
         />
         <button
           type="button"
@@ -52,7 +52,7 @@ export function BoardCreateButton() {
         <button
           type="button"
           onClick={handleCancel}
-          className="px-3 py-2 text-gray-600 text-sm rounded-lg hover:bg-gray-100"
+          className="px-3 py-2 text-slate-300 hover:text-white text-sm rounded-lg"
         >
           Cancel
         </button>
