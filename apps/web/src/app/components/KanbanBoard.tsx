@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { io, type Socket } from 'socket.io-client';
 import type {
   BoardDetailResponse,
@@ -32,6 +32,7 @@ export function KanbanBoard({ initialData }: Props) {
   );
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
+  const [isAddingList, setIsAddingList] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
@@ -93,10 +94,46 @@ export function KanbanBoard({ initialData }: Props) {
 
   async function handleDragEnd(result: DropResult) {
     setDragging(null);
-    const { draggableId, source, destination } = result;
+    const { draggableId, source, destination, type } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index)
       return;
+
+    if (type === 'COLUMN') {
+      const prev = [...lists];
+      const reordered = [...lists];
+      const [moved] = reordered.splice(source.index, 1);
+      reordered.splice(destination.index, 0, moved!);
+
+      const before = reordered[destination.index - 1];
+      const after = reordered[destination.index + 1];
+
+      let newPosition: number;
+      if (!before && !after) {
+        newPosition = 1.0;
+      } else if (!before) {
+        newPosition = after!.position / 2;
+      } else if (!after) {
+        newPosition = before.position + 1.0;
+      } else {
+        newPosition = positionBetween(before.position, after.position);
+      }
+
+      setLists(
+        reordered.map((l, i) => (i === destination.index ? { ...l, position: newPosition } : l)),
+      );
+
+      try {
+        await fetch(`/api/lists/${draggableId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ position: newPosition }),
+        });
+      } catch {
+        setLists(prev);
+      }
+      return;
+    }
 
     const destList = lists.find((l) => l.id === destination.droppableId);
     if (!destList) return;
@@ -210,6 +247,7 @@ export function KanbanBoard({ initialData }: Props) {
   async function handleAddList() {
     const trimmed = newListTitle.trim();
     if (!trimmed) return;
+    setIsAddingList(true);
     const res = await fetch('/api/lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -221,6 +259,7 @@ export function KanbanBoard({ initialData }: Props) {
     }
     setNewListTitle('');
     setAddingList(false);
+    setIsAddingList(false);
   }
 
   return (
@@ -234,22 +273,38 @@ export function KanbanBoard({ initialData }: Props) {
             ✓ {doneCount} done this session
           </div>
         )}
-        {lists.map((list) => (
-          <KanbanList
-            key={list.id}
-            list={list}
-            onCardUpdate={handleCardUpdate}
-            onCardDelete={handleCardDelete}
-            onCardCreate={handleCardCreate}
-            onListDelete={handleListDelete}
-            onListUpdate={handleListUpdate}
-            onMoveToToday={handleMoveToToday}
-          />
-        ))}
+        <Droppable droppableId="board" type="COLUMN" direction="horizontal">
+          {(boardProvided) => (
+            <div
+              ref={boardProvided.innerRef}
+              {...boardProvided.droppableProps}
+              className="flex gap-4 items-start"
+            >
+              {lists.map((list, index) => (
+                <Draggable draggableId={list.id} index={index} key={list.id}>
+                  {(listProvided) => (
+                    <KanbanList
+                      list={list}
+                      dragProvided={listProvided}
+                      onCardUpdate={handleCardUpdate}
+                      onCardDelete={handleCardDelete}
+                      onCardCreate={handleCardCreate}
+                      onListDelete={handleListDelete}
+                      onListUpdate={handleListUpdate}
+                      onMoveToToday={handleMoveToToday}
+                    />
+                  )}
+                </Draggable>
+              ))}
+              {boardProvided.placeholder}
+            </div>
+          )}
+        </Droppable>
         {addingList ? (
           <div className="shrink-0 w-72 bg-white rounded-2xl shadow-md p-3 flex flex-col gap-2">
             <input
               autoFocus
+              disabled={isAddingList}
               value={newListTitle}
               onChange={(e) => setNewListTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -260,15 +315,16 @@ export function KanbanBoard({ initialData }: Props) {
                 }
               }}
               placeholder="List title..."
-              className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500"
+              className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500 disabled:opacity-60"
             />
             <div className="flex gap-1">
               <button
                 type="button"
                 onClick={() => void handleAddList()}
-                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                disabled={isAddingList}
+                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-60"
               >
-                Add list
+                {isAddingList ? 'Adding…' : 'Add list'}
               </button>
               <button
                 type="button"
