@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { BoardSummaryResponse } from '@zenfocus/types';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 const GRADIENTS = [
   'from-indigo-500 to-purple-600',
@@ -54,7 +58,7 @@ interface BoardCardItemProps {
 
 function BoardCardItem({ board, isPinned, onTogglePin }: BoardCardItemProps) {
   return (
-    <div className="relative group aspect-video rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+    <Card className="relative group aspect-video overflow-hidden hover:shadow-lg transition-shadow rounded-xl border-0">
       <Link href={`/boards/${board.id}`} className="absolute inset-0 z-0">
         <div className={`absolute inset-0 bg-gradient-to-br ${boardGradient(board)}`} />
         <div className="absolute inset-0 bg-black/20" />
@@ -70,19 +74,24 @@ function BoardCardItem({ board, isPinned, onTogglePin }: BoardCardItemProps) {
       </Link>
 
       {/* List count badge */}
-      <div className="absolute bottom-2 right-2 z-10 bg-black/30 text-white/80 text-xs rounded px-1.5 py-0.5 pointer-events-none">
+      <Badge
+        variant="secondary"
+        className="absolute bottom-2 right-2 z-10 bg-black/30 text-white/80 border-0 pointer-events-none text-xs"
+      >
         {board.listCount} {board.listCount === 1 ? 'list' : 'lists'}
-      </div>
+      </Badge>
 
       {/* Pin button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onTogglePin(board.id)}
-        className={`absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/30 text-white transition-opacity ${isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        className={`absolute top-2 right-2 z-10 w-7 h-7 bg-black/30 text-white hover:bg-black/50 transition-opacity ${isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
         title={isPinned ? 'Unpin board' : 'Pin board'}
       >
         <span className="text-sm">{isPinned ? '★' : '☆'}</span>
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }
 
@@ -108,11 +117,13 @@ export function BoardsClient({ boards }: BoardsClientProps) {
   if (boards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-          <span className="text-2xl text-gray-400">+</span>
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          <span className="text-2xl text-muted-foreground">+</span>
         </div>
-        <p className="text-gray-500 font-medium">Create your first board</p>
-        <p className="text-gray-400 text-sm mt-1">Click &ldquo;+ New Board&rdquo; to get started</p>
+        <p className="text-foreground font-medium">Create your first board</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Click &ldquo;+ New Board&rdquo; to get started
+        </p>
       </div>
     );
   }
@@ -129,19 +140,19 @@ export function BoardsClient({ boards }: BoardsClientProps) {
     <div>
       {/* Search */}
       <div className="mb-6">
-        <input
+        <Input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search boards..."
-          className="w-full max-w-xs px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full max-w-xs"
         />
       </div>
 
       {/* Pinned section */}
       {pinned.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Pinned
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -155,7 +166,7 @@ export function BoardsClient({ boards }: BoardsClientProps) {
       {/* All boards / Search results */}
       {rest.length > 0 && (
         <div>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             {isSearching ? 'Search results' : 'All Boards'}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -173,7 +184,7 @@ export function BoardsClient({ boards }: BoardsClientProps) {
 
       {/* No search results */}
       {isSearching && filtered.length === 0 && (
-        <p className="text-gray-400 text-sm py-8 text-center">
+        <p className="text-muted-foreground text-sm py-8 text-center">
           No boards match &ldquo;{query}&rdquo;
         </p>
       )}

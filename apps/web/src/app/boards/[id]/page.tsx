@@ -2,6 +2,8 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { BoardDetailResponse } from '@zenfocus/types';
+import { Separator } from '@/components/ui/separator';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { KanbanBoard } from '../../components/KanbanBoard';
 import { BoardSettingsButton } from '../../components/BoardSettingsButton';
 
@@ -26,16 +28,17 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
 
   return (
     <main className="h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-slate-700 bg-slate-800 flex items-center gap-3">
+      <header className="px-6 py-4 border-b border-border bg-background flex items-center gap-3">
         <Link
           href="/boards"
-          className="text-slate-400 hover:text-white text-sm shrink-0"
+          className="text-muted-foreground hover:text-foreground text-sm shrink-0"
           aria-label="Back to boards"
         >
           ← Boards
         </Link>
-        <span className="text-slate-600 text-sm">/</span>
-        <h1 className="text-xl font-bold text-white truncate flex-1">{board.title}</h1>
+        <Separator orientation="vertical" className="h-4" />
+        <h1 className="text-xl font-bold text-foreground truncate flex-1">{board.title}</h1>
+        <ThemeToggle />
         <BoardSettingsButton board={board} />
       </header>
       <div className="flex-1 overflow-x-auto">
