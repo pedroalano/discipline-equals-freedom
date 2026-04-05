@@ -9,9 +9,11 @@ function bearerHeaders(req: NextRequest): HeadersInit {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const body = await req.text();
   const res = await fetch(`${API_URL}/cards/${id}/move-to-today`, {
     method: 'POST',
     headers: bearerHeaders(req),
+    body: body || undefined,
   });
   const data = (await res.json()) as unknown;
   return NextResponse.json(data, { status: res.status });

@@ -160,8 +160,8 @@ export function ClockGreeting({ name }: { name?: string }) {
       )}
 
       <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
-        {getGreeting(now?.getHours() ?? new Date().getHours())}
-        {name ? `, ${name}` : ''}
+        {now ? getGreeting(now.getHours()) : ''}
+        {now && name ? `, ${name}` : ''}
       </p>
     </div>
   );
