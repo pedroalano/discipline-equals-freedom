@@ -100,7 +100,11 @@ export class CardService {
     this.gateway.emitCardDeleted(card.list.board.id, cardId);
   }
 
-  async moveToToday(userId: string, cardId: string): Promise<{ card: CardResponse }> {
+  async moveToToday(
+    userId: string,
+    cardId: string,
+    dateStr: string,
+  ): Promise<{ card: CardResponse }> {
     const card = await this.prisma.card.findUnique({
       where: { id: cardId },
       include: { list: { include: { board: true } } },
@@ -108,8 +112,7 @@ export class CardService {
     if (!card) throw new NotFoundException('Card not found');
     if (card.list.board.userId !== userId) throw new ForbiddenException();
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const today = new Date(dateStr + 'T00:00:00.000Z');
     const lastFocus = await this.prisma.focusItem.findFirst({
       where: { userId, date: today },
       orderBy: { position: 'desc' },

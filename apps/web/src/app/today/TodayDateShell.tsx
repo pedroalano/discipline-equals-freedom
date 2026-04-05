@@ -1,5 +1,6 @@
 'use client';
 
+import { useSyncExternalStore } from 'react';
 import { localDateISO } from '@/lib/date';
 import { DailyList } from './DailyList';
 
@@ -10,7 +11,14 @@ function formatDate(dateStr: string): string {
 }
 
 export function TodayDateShell() {
-  const date = localDateISO();
+  const date = useSyncExternalStore(
+    () => () => {},
+    () => localDateISO(),
+    () => null,
+  );
+
+  if (!date) return null;
+
   return (
     <>
       <p className="text-white/50 mb-8 text-sm">{formatDate(date)}</p>

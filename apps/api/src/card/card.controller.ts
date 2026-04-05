@@ -4,6 +4,7 @@ import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { MoveCardDto } from './dto/move-card.dto';
+import { MoveToTodayDto } from './dto/move-to-today.dto';
 import { CurrentUser, type RequestUser } from '../auth/decorators/current-user.decorator';
 import type { CardResponse } from '@zenfocus/types';
 
@@ -39,8 +40,9 @@ export class CardController {
   moveToToday(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
+    @Body() dto: MoveToTodayDto,
   ): Promise<MoveToTodayResponse> {
-    return this.cards.moveToToday(user.id, id);
+    return this.cards.moveToToday(user.id, id, dto.date);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)

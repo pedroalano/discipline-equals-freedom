@@ -239,7 +239,12 @@ export function KanbanBoard({ initialData }: Props) {
   }
 
   async function handleMoveToToday(cardId: string) {
-    const res = await fetch(`/api/cards/${cardId}/move-to-today`, { method: 'POST' });
+    const date = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
+    const res = await fetch(`/api/cards/${cardId}/move-to-today`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date }),
+    });
     if (res.ok) {
       const { card } = (await res.json()) as MoveToTodayResponse;
       applyCardUpdated(card);
