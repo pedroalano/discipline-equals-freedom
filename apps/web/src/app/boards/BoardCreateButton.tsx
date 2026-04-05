@@ -1,13 +1,21 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export function BoardCreateButton() {
-  const [adding, setAdding] = useState(false);
+  const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit() {
     const trimmed = title.trim();
@@ -18,55 +26,42 @@ export function BoardCreateButton() {
       body: JSON.stringify({ title: trimmed }),
     });
     setTitle('');
-    setAdding(false);
+    setOpen(false);
     router.refresh();
   }
 
-  function handleCancel() {
-    setTitle('');
-    setAdding(false);
-  }
-
-  if (adding) {
-    return (
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') void handleSubmit();
-            if (e.key === 'Escape') handleCancel();
-          }}
-          placeholder="Board title..."
-          className="text-sm px-3 py-2 border border-slate-600 bg-slate-700 text-white placeholder-slate-400 rounded-lg outline-none focus:border-blue-400 w-48"
-        />
-        <button
-          type="button"
-          onClick={() => void handleSubmit()}
-          className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-        >
-          Create
-        </button>
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="px-3 py-2 text-slate-300 hover:text-white text-sm rounded-lg"
-        >
-          Cancel
-        </button>
-      </div>
-    );
+  function handleOpenChange(value: boolean) {
+    if (!value) setTitle('');
+    setOpen(value);
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => setAdding(true)}
-      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-    >
-      + New Board
-    </button>
+    <>
+      <Button onClick={() => setOpen(true)}>+ New Board</Button>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>New Board</DialogTitle>
+          </DialogHeader>
+          <Input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleSubmit();
+            }}
+            placeholder="Board title..."
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => handleOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void handleSubmit()} disabled={!title.trim()}>
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

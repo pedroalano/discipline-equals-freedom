@@ -13,6 +13,8 @@ import type {
   ListResponse,
   MoveToTodayResponse,
 } from '@zenfocus/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { KanbanList } from './KanbanList';
 import { useBoardUIStore } from '../../store/board';
 
@@ -267,9 +269,9 @@ export function KanbanBoard({ initialData }: Props) {
       onDragStart={(start) => setDragging(start.draggableId)}
       onDragEnd={(result) => void handleDragEnd(result)}
     >
-      <div className="relative flex gap-4 p-6 h-full items-start bg-slate-100">
+      <div className="relative flex gap-4 p-6 h-full items-start bg-muted/40">
         {doneCount > 0 && (
-          <div className="absolute top-3 right-6 bg-emerald-100 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+          <div className="absolute top-3 right-6 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-medium px-3 py-1 rounded-full shadow-sm">
             ✓ {doneCount} done this session
           </div>
         )}
@@ -301,8 +303,8 @@ export function KanbanBoard({ initialData }: Props) {
           )}
         </Droppable>
         {addingList ? (
-          <div className="shrink-0 w-72 bg-white rounded-2xl shadow-md p-3 flex flex-col gap-2">
-            <input
+          <div className="shrink-0 w-72 bg-card rounded-2xl shadow-md p-3 flex flex-col gap-2">
+            <Input
               autoFocus
               disabled={isAddingList}
               value={newListTitle}
@@ -315,37 +317,31 @@ export function KanbanBoard({ initialData }: Props) {
                 }
               }}
               placeholder="List title..."
-              className="text-sm p-1 border border-gray-300 rounded outline-none focus:border-blue-500 disabled:opacity-60"
             />
             <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={() => void handleAddList()}
-                disabled={isAddingList}
-                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-60"
-              >
+              <Button size="sm" onClick={() => void handleAddList()} disabled={isAddingList}>
                 {isAddingList ? 'Adding…' : 'Add list'}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => {
                   setNewListTitle('');
                   setAddingList(false);
                 }}
-                className="px-2 py-1 text-gray-600 text-xs hover:bg-gray-200 rounded"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => setAddingList(true)}
-            className="shrink-0 w-72 p-3 bg-white/60 rounded-2xl shadow-sm text-sm text-gray-500 hover:bg-white hover:shadow-md text-left transition-all"
+            className="shrink-0 w-72 justify-start bg-card/60 hover:bg-card rounded-2xl shadow-sm hover:shadow-md h-auto py-3 px-3 text-muted-foreground"
           >
             + Add list
-          </button>
+          </Button>
         )}
       </div>
     </DragDropContext>
