@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarDays, Kanban } from 'lucide-react';
+import { CalendarDays, Kanban, UserCircle } from 'lucide-react';
 import { usePomodoroStore } from '../../store/pomodoro';
 
 export function NavLinks() {
@@ -24,6 +24,13 @@ export function NavLinks() {
       >
         <Kanban className="w-3 h-3" />
         Boards
+      </Link>
+      <Link
+        href="/profile"
+        className="flex items-center gap-1.5 text-sm text-white hover:text-white/80 transition"
+      >
+        <UserCircle className="w-3 h-3" />
+        Profile
       </Link>
     </nav>
   );

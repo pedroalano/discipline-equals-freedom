@@ -152,6 +152,28 @@ export interface CardDeletedEvent {
   cardId: string;
 }
 
+// ── Users / Profile ───────────────────────────────────────────────────────────
+
+export interface ProfileResponse {
+  id: string;
+  email: string;
+  name: string | null;
+  createdAt: string;
+  stats: {
+    focusItemCount: number;
+    boardCount: number;
+  };
+}
+
+export interface UpdateNameRequest {
+  name: string;
+}
+
+export interface UpdatePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
@@ -174,6 +196,23 @@ export const createBoardSchema = z.object({ title: z.string().min(1).max(100) })
 export const createListSchema = z.object({ title: z.string().min(1).max(100) });
 export const createCardSchema = z.object({ title: z.string().min(1).max(200) });
 
+export const updateNameSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
+});
+
+export const updatePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type CreateFocusItemFormData = z.infer<typeof createFocusItemSchema>;
+export type UpdateNameFormData = z.infer<typeof updateNameSchema>;
+export type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
