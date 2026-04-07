@@ -67,7 +67,21 @@ export function FocusPanel() {
       const res = await fetch(`/api/focus/${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete item');
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['focus', date] });
+      const prev = queryClient.getQueryData<FocusItemResponse[]>(['focus', date]);
+      if (prev) {
+        queryClient.setQueryData<FocusItemResponse[]>(
+          ['focus', date],
+          prev.filter((i) => i.id !== id),
+        );
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
     },
   });
