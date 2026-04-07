@@ -98,7 +98,23 @@ export function DailyList({ date, initialData }: Props) {
       const res = await fetch(`/api/focus/${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Failed to delete');
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['focus', date] });
+      const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
+      if (prev) {
+        const nextItems = prev.items.filter((i) => i.id !== id);
+        queryClient.setQueryData<FocusItemListResponse>(['focus', date], {
+          items: nextItems,
+          total: nextItems.length,
+          completed: nextItems.filter((i) => i.completed).length,
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
     },
   });

@@ -21,31 +21,46 @@ export class FocusService {
       orderBy: { position: 'asc' },
     });
 
-    // Carry-over: when today has no items, bring forward yesterday's incomplete items
+    // Carry-over: when today has no items, bring forward yesterday's incomplete items.
+    // Guard with lastCarryOverDate so this fires at most once per day — not on every GET.
     const todayStr = new Date().toISOString().substring(0, 10);
     if (items.length === 0 && dateStr === todayStr) {
-      const yesterday = new Date(dayDate);
-      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-
-      const incomplete = await this.prisma.focusItem.findMany({
-        where: { userId, date: yesterday, completed: false },
-        orderBy: { position: 'asc' },
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { lastCarryOverDate: true },
       });
+      const alreadyCarriedOver =
+        user?.lastCarryOverDate?.toISOString().substring(0, 10) === todayStr;
 
-      if (incomplete.length > 0) {
-        await this.prisma.focusItem.createMany({
-          data: incomplete.map((item, idx) => ({
-            userId,
-            text: item.text,
-            date: dayDate,
-            completed: false,
-            position: idx,
-          })),
+      if (!alreadyCarriedOver) {
+        const yesterday = new Date(dayDate);
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+        const incomplete = await this.prisma.focusItem.findMany({
+          where: { userId, date: yesterday, completed: false },
+          orderBy: { position: 'asc' },
         });
 
-        items = await this.prisma.focusItem.findMany({
-          where: { userId, date: dayDate },
-          orderBy: { position: 'asc' },
+        if (incomplete.length > 0) {
+          await this.prisma.focusItem.createMany({
+            data: incomplete.map((item, idx) => ({
+              userId,
+              text: item.text,
+              date: dayDate,
+              completed: false,
+              position: idx,
+            })),
+          });
+
+          items = await this.prisma.focusItem.findMany({
+            where: { userId, date: dayDate },
+            orderBy: { position: 'asc' },
+          });
+        }
+
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { lastCarryOverDate: new Date() },
         });
       }
     }
