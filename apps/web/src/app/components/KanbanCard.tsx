@@ -56,7 +56,7 @@ export function KanbanCard({
   }
 
   const ringClass = card.isToday
-    ? 'ring-amber-300 hover:ring-amber-400'
+    ? 'ring-today-ring hover:ring-today-ring-hover'
     : 'ring-border hover:ring-primary/40';
 
   return (
@@ -78,7 +78,7 @@ export function KanbanCard({
               {card.isToday && (
                 <Badge
                   variant="outline"
-                  className="absolute top-2 right-7 text-xs border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 px-1.5 py-0.5 font-medium leading-tight"
+                  className="absolute top-2 right-7 text-xs border-today-badge-border text-today-badge-text bg-today-badge-bg px-1.5 py-0.5 font-medium leading-tight"
                 >
                   Today
                 </Badge>
@@ -117,7 +117,7 @@ export function KanbanCard({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="opacity-0 group-hover:opacity-100 h-5 w-5 text-amber-400 hover:text-amber-600 transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 h-5 w-5 text-today-ring hover:text-today-ring-hover transition-opacity"
                           onClick={() => void onMoveToToday(card.id)}
                           aria-label="Move to today"
                         >

@@ -27,6 +27,19 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    /* Kanban list accent borders */
+    --kanban-accent-1: 356 89% 67%;
+    --kanban-accent-2: 43 96% 58%;
+    --kanban-accent-3: 152 76% 50%;
+    --kanban-accent-4: 199 89% 60%;
+    --kanban-accent-5: 258 90% 71%;
+    --kanban-accent-6: 330 81% 74%;
+    /* "Today" card highlight */
+    --today-ring: 43 96% 70%;
+    --today-ring-hover: 43 96% 58%;
+    --today-badge-border: 43 96% 70%;
+    --today-badge-text: 32 95% 30%;
+    --today-badge-bg: 48 100% 96%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -59,6 +72,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --today-badge-text: 43 96% 70%;
+    --today-badge-bg: 38 92% 11%;
+    --today-badge-border: 38 92% 27%;
   }
 }
 
@@ -68,6 +84,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .page-title {
+    @apply font-cormorant text-4xl font-light tracking-wide text-foreground;
+  }
+  .page-section-label {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
 }
 

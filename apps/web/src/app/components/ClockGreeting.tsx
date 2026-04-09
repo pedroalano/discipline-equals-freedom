@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { PomodoroButton } from './PomodoroButton';
 import { usePomodoroStore } from '../../store/pomodoro';
 import type { TimerPhase } from '../../store/pomodoro';
+import { Button } from '@/components/ui/button';
 
 function getGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -114,31 +115,20 @@ export function ClockGreeting({ name }: { name?: string }) {
           </div>
 
           {/* Controls */}
-          <div className="mt-1 flex gap-3 text-sm font-cormorant">
-            <button
-              type="button"
+          <div className="mt-1 flex gap-3">
+            <Button
+              variant="glass"
               onClick={status === 'running' ? pause : resume}
-              className="flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-white hover:bg-white/20 transition-colors"
               aria-label={status === 'running' ? 'Pause' : 'Resume'}
             >
               {status === 'running' ? '⏸' : '▶'} {status === 'running' ? 'Pause' : 'Resume'}
-            </button>
-            <button
-              type="button"
-              onClick={skip}
-              className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-white hover:bg-white/20 transition-colors"
-              aria-label="Skip to next phase"
-            >
+            </Button>
+            <Button variant="glass" onClick={skip} aria-label="Skip to next phase">
               ⏭ Skip
-            </button>
-            <button
-              type="button"
-              onClick={stop}
-              className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-white hover:bg-white/20 transition-colors"
-              aria-label="Stop timer"
-            >
+            </Button>
+            <Button variant="glass" onClick={stop} aria-label="Stop timer">
               ✕ Stop
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

@@ -42,6 +42,21 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        'kanban-accent': {
+          '1': 'hsl(var(--kanban-accent-1))',
+          '2': 'hsl(var(--kanban-accent-2))',
+          '3': 'hsl(var(--kanban-accent-3))',
+          '4': 'hsl(var(--kanban-accent-4))',
+          '5': 'hsl(var(--kanban-accent-5))',
+          '6': 'hsl(var(--kanban-accent-6))',
+        },
+        'today-ring': 'hsl(var(--today-ring))',
+        'today-ring-hover': 'hsl(var(--today-ring-hover))',
+        'today-badge': {
+          border: 'hsl(var(--today-badge-border))',
+          text: 'hsl(var(--today-badge-text))',
+          bg: 'hsl(var(--today-badge-bg))',
+        },
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
