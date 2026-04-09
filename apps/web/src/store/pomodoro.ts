@@ -58,13 +58,9 @@ function todayString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function nextPhase(
-  current: TimerPhase,
-  sessionsDoneThisSet: number,
-  sessionsBeforeLong: number,
-): TimerPhase {
+function nextPhase(current: TimerPhase, isSetComplete: boolean): TimerPhase {
   if (current === 'work') {
-    return sessionsDoneThisSet >= sessionsBeforeLong ? 'longBreak' : 'shortBreak';
+    return isSetComplete ? 'longBreak' : 'shortBreak';
   }
   return 'work';
 }
@@ -131,18 +127,18 @@ export const usePomodoroStore = create<PomodoroState>()(
         const today = todayString();
         let newDailyCount = dailyCountDate === today ? dailyCount : 0;
         let newSessionsDone = sessionsDoneThisSet;
+        let isSetComplete = false;
 
         if (countSession && phase === 'work') {
           newDailyCount += 1;
           newSessionsDone = sessionsDoneThisSet + 1;
-          if (newSessionsDone >= settings.sessionsBeforeLong) {
+          isSetComplete = newSessionsDone >= settings.sessionsBeforeLong;
+          if (isSetComplete) {
             newSessionsDone = 0;
           }
-        } else if (!countSession && phase === 'work') {
-          // skip doesn't count toward daily or set progress
         }
 
-        const next = nextPhase(phase, newSessionsDone, settings.sessionsBeforeLong);
+        const next = nextPhase(phase, isSetComplete);
         const shouldAutoStart =
           (next !== 'work' && settings.autoStartBreak) ||
           (next === 'work' && settings.autoStartWork);
@@ -165,9 +161,16 @@ export const usePomodoroStore = create<PomodoroState>()(
       },
 
       updateSettings(patch: Partial<PomodoroSettings>) {
-        const { settings, status, phase } = get();
+        const { settings, status, phase, sessionsDoneThisSet } = get();
         const next = { ...settings, ...patch };
         set({ settings: next });
+
+        if (
+          patch.sessionsBeforeLong !== undefined &&
+          sessionsDoneThisSet >= next.sessionsBeforeLong
+        ) {
+          set({ sessionsDoneThisSet: next.sessionsBeforeLong - 1 });
+        }
 
         // If idle, reset secondsLeft to reflect new duration
         if (status === 'idle') {
