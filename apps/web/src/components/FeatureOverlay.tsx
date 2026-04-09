@@ -58,7 +58,7 @@ export function FeatureOverlay() {
           {/* Panel */}
           <motion.div
             key={`feature-panel-${activeFeature}-${activeBoardId ?? 'list'}`}
-            className={`${panelClass} z-[25] rounded-2xl bg-background overflow-hidden flex flex-col shadow-2xl`}
+            className={`${panelClass} z-[25] rounded-2xl bg-background/85 backdrop-blur-sm overflow-hidden flex flex-col shadow-2xl`}
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
