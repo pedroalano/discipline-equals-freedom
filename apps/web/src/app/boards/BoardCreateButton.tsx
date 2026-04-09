@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export function BoardCreateButton() {
+export function BoardCreateButton({ onBoardCreated }: { onBoardCreated?: () => void } = {}) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const router = useRouter();
@@ -27,6 +27,7 @@ export function BoardCreateButton() {
     });
     setTitle('');
     setOpen(false);
+    onBoardCreated?.();
     router.refresh();
   }
 

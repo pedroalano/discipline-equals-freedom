@@ -8,7 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BoardSettingsPanel } from './BoardSettingsPanel';
 
-export function BoardSettingsButton({ board }: { board: BoardSummaryResponse }) {
+export function BoardSettingsButton({
+  board,
+  onDeleteSuccess,
+}: {
+  board: BoardSummaryResponse;
+  onDeleteSuccess?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <TooltipProvider>
@@ -24,7 +30,11 @@ export function BoardSettingsButton({ board }: { board: BoardSummaryResponse }) 
           <TooltipContent>Board settings</TooltipContent>
         </Tooltip>
         <SheetContent side="right" className="w-80 p-0">
-          <BoardSettingsPanel board={board} onClose={() => setOpen(false)} />
+          <BoardSettingsPanel
+            board={board}
+            onClose={() => setOpen(false)}
+            onDeleteSuccess={onDeleteSuccess}
+          />
         </SheetContent>
       </Sheet>
     </TooltipProvider>
