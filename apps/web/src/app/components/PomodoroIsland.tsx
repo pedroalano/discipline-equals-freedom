@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePomodoroStore } from '../../store/pomodoro';
+import { Button } from '@/components/ui/button';
 import { usePomodoroTimer } from '../../hooks/usePomodoroTimer';
 import { useAudioEngine } from '../../hooks/useAudioEngine';
 import { useTabTitle } from '../../hooks/useTabTitle';
@@ -69,14 +70,15 @@ export function PomodoroIsland() {
 
         {/* Settings gear button — only visible in Pomodoro mode */}
         {isActive && (
-          <button
-            type="button"
+          <Button
+            variant="glass"
+            size="icon"
+            className="rounded-full backdrop-blur-sm"
             onClick={() => setShowSettings(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/50 backdrop-blur-sm transition-colors hover:text-white"
             aria-label="Open timer settings"
           >
             ⚙
-          </button>
+          </Button>
         )}
       </div>
 

@@ -54,24 +54,42 @@ interface BoardCardItemProps {
   board: BoardSummaryResponse;
   isPinned: boolean;
   onTogglePin: (id: string) => void;
+  onBoardClick?: (id: string) => void;
 }
 
-function BoardCardItem({ board, isPinned, onTogglePin }: BoardCardItemProps) {
+const cardInnerContent = (board: BoardSummaryResponse, gradient: string) => (
+  <>
+    <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+    <div className="absolute inset-0 bg-black/20" />
+    <div className="relative h-full flex flex-col justify-end p-4">
+      <h2 className="font-bold text-lg text-white leading-tight">{board.title}</h2>
+      {board.description && (
+        <p className="text-xs text-white/60 mt-0.5 line-clamp-1">
+          {board.description.slice(0, 60)}
+        </p>
+      )}
+      <p className="text-xs text-white/40 mt-1">{relativeTime(board.updatedAt)}</p>
+    </div>
+  </>
+);
+
+function BoardCardItem({ board, isPinned, onTogglePin, onBoardClick }: BoardCardItemProps) {
+  const gradient = boardGradient(board);
   return (
     <Card className="relative group aspect-video overflow-hidden hover:shadow-lg transition-shadow rounded-xl border-0">
-      <Link href={`/boards/${board.id}`} className="absolute inset-0 z-0">
-        <div className={`absolute inset-0 bg-gradient-to-br ${boardGradient(board)}`} />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative h-full flex flex-col justify-end p-4">
-          <h2 className="font-bold text-lg text-white leading-tight">{board.title}</h2>
-          {board.description && (
-            <p className="text-xs text-white/60 mt-0.5 line-clamp-1">
-              {board.description.slice(0, 60)}
-            </p>
-          )}
-          <p className="text-xs text-white/40 mt-1">{relativeTime(board.updatedAt)}</p>
-        </div>
-      </Link>
+      {onBoardClick ? (
+        <button
+          onClick={() => onBoardClick(board.id)}
+          className="absolute inset-0 z-0 text-left"
+          aria-label={`Open ${board.title}`}
+        >
+          {cardInnerContent(board, gradient)}
+        </button>
+      ) : (
+        <Link href={`/boards/${board.id}`} className="absolute inset-0 z-0">
+          {cardInnerContent(board, gradient)}
+        </Link>
+      )}
 
       {/* List count badge */}
       <Badge
@@ -97,9 +115,10 @@ function BoardCardItem({ board, isPinned, onTogglePin }: BoardCardItemProps) {
 
 interface BoardsClientProps {
   boards: BoardSummaryResponse[];
+  onBoardClick?: (id: string) => void;
 }
 
-export function BoardsClient({ boards }: BoardsClientProps) {
+export function BoardsClient({ boards, onBoardClick }: BoardsClientProps) {
   const [query, setQuery] = useState('');
   const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
@@ -157,7 +176,13 @@ export function BoardsClient({ boards }: BoardsClientProps) {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {pinned.map((board) => (
-              <BoardCardItem key={board.id} board={board} isPinned={true} onTogglePin={togglePin} />
+              <BoardCardItem
+                key={board.id}
+                board={board}
+                isPinned={true}
+                onTogglePin={togglePin}
+                onBoardClick={onBoardClick}
+              />
             ))}
           </div>
         </div>
@@ -176,6 +201,7 @@ export function BoardsClient({ boards }: BoardsClientProps) {
                 board={board}
                 isPinned={pinnedIds.includes(board.id)}
                 onTogglePin={togglePin}
+                onBoardClick={onBoardClick}
               />
             ))}
           </div>

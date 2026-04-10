@@ -20,9 +20,10 @@ const COLOR_OPTIONS = [
 interface BoardSettingsPanelProps {
   board: BoardSummaryResponse;
   onClose: () => void;
+  onDeleteSuccess?: () => void;
 }
 
-export function BoardSettingsPanel({ board, onClose }: BoardSettingsPanelProps) {
+export function BoardSettingsPanel({ board, onClose, onDeleteSuccess }: BoardSettingsPanelProps) {
   const router = useRouter();
   const [title, setTitle] = useState(board.title);
   const [description, setDescription] = useState(board.description ?? '');
@@ -34,7 +35,12 @@ export function BoardSettingsPanel({ board, onClose }: BoardSettingsPanelProps) 
   async function handleDelete() {
     setDeleting(true);
     await fetch(`/api/boards/${board.id}`, { method: 'DELETE' });
-    router.push('/boards');
+    if (onDeleteSuccess) {
+      onDeleteSuccess();
+      onClose();
+    } else {
+      router.push('/boards');
+    }
   }
 
   async function handleSave() {

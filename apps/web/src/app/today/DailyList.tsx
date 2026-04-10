@@ -2,6 +2,7 @@
 
 import { useState, useRef, type KeyboardEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 
 interface Props {
@@ -165,7 +166,7 @@ export function DailyList({ date, initialData }: Props) {
     <div className="space-y-6">
       {/* Progress */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm text-white/50">
+        <div className="flex justify-between text-sm text-muted-foreground">
           <span>
             {completed} / {total} tasks completed
           </span>
@@ -174,7 +175,7 @@ export function DailyList({ date, initialData }: Props) {
         <progress
           value={completed}
           max={total || 1}
-          className="w-full h-1.5 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-value]:bg-white/60 [&::-moz-progress-bar]:bg-white/60"
+          className="w-full h-1.5 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:bg-foreground/60 [&::-moz-progress-bar]:bg-foreground/60"
         />
       </div>
 
@@ -187,17 +188,19 @@ export function DailyList({ date, initialData }: Props) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add a task..."
-          className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition"
+          className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition"
         />
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => {
             if (text.trim()) addMutation.mutate(text.trim());
           }}
           disabled={!text.trim() || addMutation.isPending}
-          className="rounded-lg bg-white/10 px-4 py-3 text-sm text-white transition hover:bg-white/20 disabled:opacity-40"
+          className="px-4 py-3 h-auto"
         >
           Add
-        </button>
+        </Button>
       </div>
 
       {/* Items */}
@@ -205,14 +208,14 @@ export function DailyList({ date, initialData }: Props) {
         {items.map((item, idx) => (
           <li
             key={item.id}
-            className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3"
+            className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3"
           >
             {/* Reorder buttons */}
             <div className="flex flex-col gap-0.5">
               <button
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
-                className="text-white/20 hover:text-white/60 disabled:invisible leading-none text-xs transition"
+                className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
                 aria-label="Move up"
               >
                 ▲
@@ -220,7 +223,7 @@ export function DailyList({ date, initialData }: Props) {
               <button
                 onClick={() => moveDown(idx)}
                 disabled={idx === items.length - 1}
-                className="text-white/20 hover:text-white/60 disabled:invisible leading-none text-xs transition"
+                className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
                 aria-label="Move down"
               >
                 ▼
@@ -230,11 +233,11 @@ export function DailyList({ date, initialData }: Props) {
             {/* Checkbox */}
             <button
               onClick={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
-              className="h-5 w-5 shrink-0 rounded border border-white/30 flex items-center justify-center transition hover:border-white/60"
+              className="h-5 w-5 shrink-0 rounded border border-border flex items-center justify-center transition hover:border-foreground/60"
               aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
             >
               {item.completed && (
-                <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3 text-white">
+                <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3 text-foreground">
                   <path
                     d="M4 10 L8 14 L16 6"
                     stroke="currentColor"
@@ -248,7 +251,7 @@ export function DailyList({ date, initialData }: Props) {
 
             {/* Text */}
             <span
-              className={`flex-1 text-sm leading-relaxed ${item.completed ? 'line-through text-white/30' : 'text-white'}`}
+              className={`flex-1 text-sm leading-relaxed ${item.completed ? 'line-through text-muted-foreground/60' : 'text-foreground'}`}
             >
               {item.text}
             </span>
@@ -256,7 +259,7 @@ export function DailyList({ date, initialData }: Props) {
             {/* Delete */}
             <button
               onClick={() => deleteMutation.mutate(item.id)}
-              className="shrink-0 text-white/20 hover:text-white/60 transition text-lg leading-none"
+              className="shrink-0 text-muted-foreground/40 hover:text-foreground transition text-lg leading-none"
               aria-label="Delete task"
             >
               ×
@@ -266,11 +269,13 @@ export function DailyList({ date, initialData }: Props) {
       </ul>
 
       {items.length === 0 && (
-        <p className="py-8 text-center text-sm text-white/30">No tasks yet. Add one above.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground/60">
+          No tasks yet. Add one above.
+        </p>
       )}
 
       {/* Footer */}
-      <p className="text-center text-xs text-white/25 pt-4">
+      <p className="text-center text-xs text-muted-foreground/50 pt-4">
         Unfinished tasks will move to tomorrow
       </p>
     </div>

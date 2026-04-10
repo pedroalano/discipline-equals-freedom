@@ -21,7 +21,7 @@ export function TodayDateShell() {
 
   return (
     <>
-      <p className="text-white/50 mb-8 text-sm">{formatDate(date)}</p>
+      <p className="text-muted-foreground mb-8 text-sm">{formatDate(date)}</p>
       <DailyList date={date} />
     </>
   );

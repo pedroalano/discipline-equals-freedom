@@ -12,12 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const ACCENT_COLORS = [
-  'border-t-rose-400',
-  'border-t-amber-400',
-  'border-t-emerald-400',
-  'border-t-sky-400',
-  'border-t-violet-400',
-  'border-t-pink-400',
+  'border-t-kanban-accent-1',
+  'border-t-kanban-accent-2',
+  'border-t-kanban-accent-3',
+  'border-t-kanban-accent-4',
+  'border-t-kanban-accent-5',
+  'border-t-kanban-accent-6',
 ];
 
 function listAccent(id: string): string {
@@ -149,7 +149,7 @@ export function KanbanList({
               ref={provided.innerRef}
               {...provided.droppableProps}
               className={`flex flex-col gap-3 min-h-[60px] rounded transition-colors ${
-                snapshot.isDraggingOver ? 'bg-blue-100 dark:bg-blue-950 ring-1 ring-blue-300' : ''
+                snapshot.isDraggingOver ? 'bg-accent/60 ring-1 ring-ring/30' : ''
               }`}
             >
               <AnimatePresence>

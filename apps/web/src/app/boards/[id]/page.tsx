@@ -1,9 +1,7 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import type { BoardDetailResponse } from '@zenfocus/types';
-import { Separator } from '@/components/ui/separator';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { PageShell } from '@/components/PageShell';
 import { KanbanBoard } from '../../components/KanbanBoard';
 import { BoardSettingsButton } from '../../components/BoardSettingsButton';
 
@@ -27,23 +25,14 @@ export default async function BoardDetailPage({ params }: { params: Promise<{ id
   if (!board) notFound();
 
   return (
-    <main className="h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-border bg-background flex items-center gap-3">
-        <Link
-          href="/boards"
-          className="text-muted-foreground hover:text-foreground text-sm shrink-0"
-          aria-label="Back to boards"
-        >
-          ← Boards
-        </Link>
-        <Separator orientation="vertical" className="h-4" />
-        <h1 className="text-xl font-bold text-foreground truncate flex-1">{board.title}</h1>
-        <ThemeToggle />
-        <BoardSettingsButton board={board} />
-      </header>
-      <div className="flex-1 overflow-x-auto">
-        <KanbanBoard initialData={board} />
-      </div>
-    </main>
+    <PageShell
+      backHref="/boards"
+      backLabel="Boards"
+      title={board.title}
+      actions={<BoardSettingsButton board={board} />}
+      fullHeight
+    >
+      <KanbanBoard initialData={board} />
+    </PageShell>
   );
 }
