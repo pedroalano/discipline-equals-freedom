@@ -12,6 +12,7 @@ import { DailyImageModule } from './daily-image/daily-image.module';
 import { BoardModule } from './board/board.module';
 import { ListModule } from './list/list.module';
 import { CardModule } from './card/card.module';
+import { HabitModule } from './habit/habit.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -27,6 +28,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     BoardModule,
     ListModule,
     CardModule,
+    HabitModule,
   ],
   controllers: [HealthController],
   providers: [

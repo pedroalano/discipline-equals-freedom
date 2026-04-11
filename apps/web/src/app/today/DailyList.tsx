@@ -4,6 +4,8 @@ import { useState, useRef, type KeyboardEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
+import { HabitBadge } from './HabitBadge';
+import { HabitsModal } from './HabitsModal';
 
 interface Props {
   date: string;
@@ -43,6 +45,7 @@ const EMPTY: FocusItemListResponse = { items: [], total: 0, completed: 0 };
 export function DailyList({ date, initialData }: Props) {
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
+  const [habitsOpen, setHabitsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data = EMPTY } = useQuery({
@@ -52,6 +55,8 @@ export function DailyList({ date, initialData }: Props) {
   });
 
   const { items = [], total = 0, completed = 0 } = data ?? {};
+  const habitItems = items.filter((i) => i.habitId !== null);
+  const taskItems = items.filter((i) => i.habitId === null);
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const addMutation = useMutation({
@@ -71,8 +76,14 @@ export function DailyList({ date, initialData }: Props) {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, completed: c }: { id: string; completed: boolean }) =>
-      patchItem(id, { completed: c }),
+    mutationFn: ({
+      id,
+      completed: c,
+    }: {
+      id: string;
+      completed: boolean;
+      habitId: string | null;
+    }) => patchItem(id, { completed: c }),
     onMutate: async ({ id, completed: c }) => {
       await queryClient.cancelQueries({ queryKey: ['focus', date] });
       const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
@@ -93,6 +104,9 @@ export function DailyList({ date, initialData }: Props) {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
       if (variables?.completed) {
         void queryClient.invalidateQueries({ queryKey: ['board', 'modal'] });
+        if (variables.habitId) {
+          void queryClient.invalidateQueries({ queryKey: ['habit-streak', variables.habitId] });
+        }
       }
     },
   });
@@ -153,16 +167,89 @@ export function DailyList({ date, initialData }: Props) {
     }
   }
 
-  function moveUp(idx: number) {
+  function moveUp(list: FocusItemResponse[], idx: number) {
     if (idx === 0) return;
-    const newPos = computeMoveUpPosition(items, idx);
-    reorderMutation.mutate({ id: items[idx]!.id, position: newPos });
+    const newPos = computeMoveUpPosition(list, idx);
+    reorderMutation.mutate({ id: list[idx]!.id, position: newPos });
   }
 
-  function moveDown(idx: number) {
-    if (idx === items.length - 1) return;
-    const newPos = computeMoveDownPosition(items, idx);
-    reorderMutation.mutate({ id: items[idx]!.id, position: newPos });
+  function moveDown(list: FocusItemResponse[], idx: number) {
+    if (idx === list.length - 1) return;
+    const newPos = computeMoveDownPosition(list, idx);
+    reorderMutation.mutate({ id: list[idx]!.id, position: newPos });
+  }
+
+  function renderItem(item: FocusItemResponse, idx: number, list: FocusItemResponse[]) {
+    return (
+      <li
+        key={item.id}
+        className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3"
+      >
+        {/* Reorder buttons */}
+        <div className="flex flex-col gap-0.5">
+          <button
+            onClick={() => moveUp(list, idx)}
+            disabled={idx === 0}
+            className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
+            aria-label="Move up"
+          >
+            ▲
+          </button>
+          <button
+            onClick={() => moveDown(list, idx)}
+            disabled={idx === list.length - 1}
+            className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
+            aria-label="Move down"
+          >
+            ▼
+          </button>
+        </div>
+
+        {/* Checkbox */}
+        <button
+          onClick={() =>
+            toggleMutation.mutate({
+              id: item.id,
+              completed: !item.completed,
+              habitId: item.habitId,
+            })
+          }
+          className="h-5 w-5 shrink-0 rounded border border-border flex items-center justify-center transition hover:border-foreground/60"
+          aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
+        >
+          {item.completed && (
+            <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3 text-foreground">
+              <path
+                d="M4 10 L8 14 L16 6"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+
+        {/* Text */}
+        <span
+          className={`flex-1 text-sm font-medium leading-relaxed ${item.completed ? 'line-through text-muted-foreground/60' : 'text-foreground'}`}
+        >
+          {item.text}
+        </span>
+
+        {/* Habit streak badge */}
+        {item.habitId && <HabitBadge habitId={item.habitId} />}
+
+        {/* Delete */}
+        <button
+          onClick={() => deleteMutation.mutate(item.id)}
+          className="shrink-0 text-muted-foreground/40 hover:text-foreground transition text-lg leading-none"
+          aria-label="Delete task"
+        >
+          ×
+        </button>
+      </li>
+    );
   }
 
   return (
@@ -171,7 +258,7 @@ export function DailyList({ date, initialData }: Props) {
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>
-            {completed} / {total} tasks completed
+            {completed} / {total} completed
           </span>
           <span>{progress}%</span>
         </div>
@@ -182,105 +269,92 @@ export function DailyList({ date, initialData }: Props) {
         />
       </div>
 
-      {/* Add input */}
-      <div className="flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Add a task..."
-          className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition"
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            if (text.trim()) addMutation.mutate(text.trim());
-          }}
-          disabled={!text.trim() || addMutation.isPending}
-          className="px-4 py-3 h-auto"
-        >
-          Add
-        </Button>
+      {/* Habits section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-semibold tracking-widest text-foreground uppercase">
+            Habits
+          </h3>
+          <button
+            onClick={() => setHabitsOpen(true)}
+            className="text-foreground hover:opacity-70 transition"
+            aria-label="Manage habits"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-5 h-5"
+            >
+              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+            </svg>
+          </button>
+        </div>
+
+        {habitItems.length > 0 ? (
+          <ul className="space-y-2">
+            {habitItems.map((item, idx) => renderItem(item, idx, habitItems))}
+          </ul>
+        ) : (
+          <p className="py-3 text-center text-xs text-foreground">
+            No habits for today.{' '}
+            <button
+              onClick={() => setHabitsOpen(true)}
+              className="underline hover:opacity-70 transition"
+            >
+              Add one
+            </button>
+          </p>
+        )}
       </div>
 
-      {/* Items */}
-      <ul className="space-y-2">
-        {items.map((item, idx) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3"
+      {/* Tasks section */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-semibold tracking-widest text-foreground uppercase">
+          Today&apos;s Tasks
+        </h3>
+
+        {/* Add input */}
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Add a task..."
+            className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring transition"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (text.trim()) addMutation.mutate(text.trim());
+            }}
+            disabled={!text.trim() || addMutation.isPending}
+            className="px-4 py-3 h-auto"
           >
-            {/* Reorder buttons */}
-            <div className="flex flex-col gap-0.5">
-              <button
-                onClick={() => moveUp(idx)}
-                disabled={idx === 0}
-                className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
-                aria-label="Move up"
-              >
-                ▲
-              </button>
-              <button
-                onClick={() => moveDown(idx)}
-                disabled={idx === items.length - 1}
-                className="text-muted-foreground/40 hover:text-foreground disabled:invisible leading-none text-xs transition"
-                aria-label="Move down"
-              >
-                ▼
-              </button>
-            </div>
+            Add
+          </Button>
+        </div>
 
-            {/* Checkbox */}
-            <button
-              onClick={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
-              className="h-5 w-5 shrink-0 rounded border border-border flex items-center justify-center transition hover:border-foreground/60"
-              aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
-            >
-              {item.completed && (
-                <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3 text-foreground">
-                  <path
-                    d="M4 10 L8 14 L16 6"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-
-            {/* Text */}
-            <span
-              className={`flex-1 text-sm leading-relaxed ${item.completed ? 'line-through text-muted-foreground/60' : 'text-foreground'}`}
-            >
-              {item.text}
-            </span>
-
-            {/* Delete */}
-            <button
-              onClick={() => deleteMutation.mutate(item.id)}
-              className="shrink-0 text-muted-foreground/40 hover:text-foreground transition text-lg leading-none"
-              aria-label="Delete task"
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {items.length === 0 && (
-        <p className="py-8 text-center text-sm text-muted-foreground/60">
-          No tasks yet. Add one above.
-        </p>
-      )}
+        {taskItems.length > 0 ? (
+          <ul className="space-y-2">
+            {taskItems.map((item, idx) => renderItem(item, idx, taskItems))}
+          </ul>
+        ) : (
+          <p className="py-3 text-center text-sm text-muted-foreground/60">
+            No tasks yet. Add one above.
+          </p>
+        )}
+      </div>
 
       {/* Footer */}
       <p className="text-center text-xs text-muted-foreground/50 pt-4">
         Unfinished tasks will move to tomorrow
       </p>
+
+      <HabitsModal open={habitsOpen} onOpenChange={setHabitsOpen} />
     </div>
   );
 }

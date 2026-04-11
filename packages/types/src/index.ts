@@ -55,12 +55,57 @@ export interface FocusItemResponse {
   completed: boolean;
   position: number;
   createdAt: string;
+  habitId: string | null;
 }
 
 export interface FocusItemListResponse {
   items: FocusItemResponse[];
   total: number;
   completed: number;
+}
+
+// ── Habit ─────────────────────────────────────────────────────────────────────
+
+export type HabitFrequency = 'DAILY' | 'CUSTOM';
+
+export interface CreateHabitRequest {
+  name: string;
+  description?: string;
+  frequency: HabitFrequency;
+  customDays?: number[]; // weekday numbers 0-6; required when frequency === 'CUSTOM'
+}
+
+export interface UpdateHabitRequest {
+  name?: string;
+  description?: string;
+  frequency?: HabitFrequency;
+  customDays?: number[];
+  isActive?: boolean;
+  position?: number;
+}
+
+export interface HabitResponse {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  frequency: HabitFrequency;
+  customDays: number[] | null;
+  isActive: boolean;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HabitStreakResponse {
+  habitId: string;
+  currentStreak: number;
+  longestStreak: number;
+  completedToday: boolean;
+}
+
+export interface HabitListResponse {
+  habits: HabitResponse[];
 }
 
 // ── Board ─────────────────────────────────────────────────────────────────────
@@ -191,6 +236,19 @@ export const createFocusItemSchema = z.object({
   text: z.string().min(1, 'Text is required').max(500, 'Text too long'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
 });
+
+export const createHabitSchema = z
+  .object({
+    name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
+    frequency: z.enum(['DAILY', 'CUSTOM']),
+    customDays: z.array(z.number().int().min(0).max(6)).min(1).max(7).optional(),
+  })
+  .refine((d) => d.frequency !== 'CUSTOM' || (d.customDays && d.customDays.length > 0), {
+    message: 'customDays required for CUSTOM frequency',
+    path: ['customDays'],
+  });
+
+export type CreateHabitFormData = z.infer<typeof createHabitSchema>;
 
 export const createBoardSchema = z.object({ title: z.string().min(1).max(100) });
 export const createListSchema = z.object({ title: z.string().min(1).max(100) });

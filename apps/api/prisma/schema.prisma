@@ -21,6 +21,7 @@ model User {
   refreshTokens     RefreshToken[]
   focusItems        FocusItem[]
   boards            Board[]
+  habits            Habit[]
 }
 
 model RefreshToken {
@@ -40,7 +41,34 @@ model FocusItem {
   completed Boolean  @default(false)
   position  Float    @default(0)
   createdAt DateTime @default(now())
+  habitId   String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit     Habit?   @relation(fields: [habitId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([habitId])
+}
+
+enum HabitFrequency {
+  DAILY
+  CUSTOM
+}
+
+model Habit {
+  id         String         @id @default(cuid())
+  userId     String
+  name        String
+  description String?
+  frequency   HabitFrequency @default(DAILY)
+  customDays String?
+  isActive   Boolean        @default(true)
+  position   Float          @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusItems FocusItem[]
+
+  @@index([userId, isActive])
 }
 
 model Board {

@@ -6,6 +6,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import { localDateISO } from '@/lib/date';
 import { usePomodoroStore } from '../../store/pomodoro';
+import { HabitBadge } from '../today/HabitBadge';
+import { HabitsModal } from '../today/HabitsModal';
 
 async function fetchFocusItems(date: string): Promise<FocusItemListResponse> {
   const res = await fetch(`/api/focus?date=${date}`);
@@ -23,6 +25,7 @@ export function FocusPanel() {
   const date = localDateISO();
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
+  const [habitsOpen, setHabitsOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
@@ -31,6 +34,8 @@ export function FocusPanel() {
     queryFn: () => fetchFocusItems(date),
   });
   const items: FocusItemResponse[] = data?.items ?? [];
+  const habitItems = items.filter((i) => i.habitId !== null);
+  const taskItems = items.filter((i) => i.habitId === null);
 
   const createMutation = useMutation({
     mutationFn: async (itemText: string) => {
@@ -49,7 +54,14 @@ export function FocusPanel() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+    mutationFn: async ({
+      id,
+      completed,
+    }: {
+      id: string;
+      completed: boolean;
+      habitId: string | null;
+    }) => {
       const res = await fetch(`/api/focus/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -62,6 +74,9 @@ export function FocusPanel() {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
       if (variables.completed) {
         void queryClient.invalidateQueries({ queryKey: ['board', 'modal'] });
+        if (variables.habitId) {
+          void queryClient.invalidateQueries({ queryKey: ['habit-streak', variables.habitId] });
+        }
       }
     },
   });
@@ -102,7 +117,7 @@ export function FocusPanel() {
         textareaRef.current?.focus();
       } else if (e.key === 'c') {
         const first = items.find((item) => !item.completed);
-        if (first) toggleMutation.mutate({ id: first.id, completed: true });
+        if (first) toggleMutation.mutate({ id: first.id, completed: true, habitId: first.habitId });
       }
     }
     window.addEventListener('keydown', onKeyDown);
@@ -122,6 +137,60 @@ export function FocusPanel() {
     if (e.key === 'Escape') {
       textareaRef.current?.blur();
     }
+  }
+
+  function renderItem(item: FocusItemResponse) {
+    return (
+      <motion.li
+        key={item.id}
+        layout
+        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 backdrop-blur"
+      >
+        <button
+          onClick={() =>
+            toggleMutation.mutate({
+              id: item.id,
+              completed: !item.completed,
+              habitId: item.habitId,
+            })
+          }
+          className="mt-0.5 h-5 w-5 shrink-0 rounded border border-white/40 transition hover:border-white/70"
+          aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
+        >
+          {item.completed && (
+            <svg viewBox="0 0 20 20" fill="none" className="text-white">
+              <motion.path
+                d="M4 10 L8 14 L16 6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
+              />
+            </svg>
+          )}
+        </button>
+        <span
+          className={`flex-1 text-base font-medium leading-relaxed text-white ${item.completed ? 'line-through opacity-50' : ''}`}
+        >
+          {item.text}
+        </span>
+        {item.habitId && <HabitBadge habitId={item.habitId} />}
+        <button
+          onClick={() => deleteMutation.mutate(item.id)}
+          className="shrink-0 text-white/30 transition hover:text-white/70"
+          aria-label="Delete item"
+        >
+          ×
+        </button>
+      </motion.li>
+    );
   }
 
   return (
@@ -155,60 +224,65 @@ export function FocusPanel() {
         </div>
       </form>
 
-      <ul className="space-y-2">
-        <AnimatePresence mode="popLayout">
-          {items.map((item) => (
-            <motion.li
-              key={item.id}
-              layout
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -20 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-start gap-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 backdrop-blur"
+      {/* Habits */}
+      {(habitItems.length > 0 || !isLoading) && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-semibold tracking-widest text-white uppercase">
+              Habits
+            </span>
+            <button
+              onClick={() => setHabitsOpen(true)}
+              className="text-white hover:text-white/70 transition"
+              aria-label="Manage habits"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
+                <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+              </svg>
+            </button>
+          </div>
+          <AnimatePresence mode="popLayout">
+            {habitItems.map((item) => renderItem(item))}
+          </AnimatePresence>
+          {habitItems.length === 0 && (
+            <p className="text-center text-xs text-white py-2">
               <button
-                onClick={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
-                className="mt-0.5 h-5 w-5 shrink-0 rounded border border-white/40 transition hover:border-white/70"
-                aria-label={item.completed ? 'Mark incomplete' : 'Mark complete'}
+                onClick={() => setHabitsOpen(true)}
+                className="underline hover:text-white/70 transition"
               >
-                {item.completed && (
-                  <svg viewBox="0 0 20 20" fill="none" className="text-white">
-                    <motion.path
-                      d="M4 10 L8 14 L16 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
-                    />
-                  </svg>
-                )}
+                Add habits
               </button>
-              <span
-                className={`flex-1 text-base leading-relaxed text-white ${item.completed ? 'line-through opacity-50' : ''}`}
-              >
-                {item.text}
-              </span>
-              <button
-                onClick={() => deleteMutation.mutate(item.id)}
-                className="shrink-0 text-white/30 transition hover:text-white/70"
-                aria-label="Delete item"
-              >
-                ×
-              </button>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ul>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Tasks */}
+      {(taskItems.length > 0 || !isLoading) && (
+        <div className="space-y-1">
+          {(habitItems.length > 0 || taskItems.length > 0) && (
+            <span className="block px-1 text-xs font-semibold tracking-widest text-white uppercase">
+              Tasks
+            </span>
+          )}
+          <AnimatePresence mode="popLayout">
+            {taskItems.map((item) => renderItem(item))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {items.length === 0 && !isLoading && (
         <p className="select-none py-6 text-center text-base text-white/30">
           What matters most today?
         </p>
       )}
+
+      <HabitsModal open={habitsOpen} onOpenChange={setHabitsOpen} />
     </div>
   );
 }
