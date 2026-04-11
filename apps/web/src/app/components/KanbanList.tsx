@@ -11,20 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const ACCENT_COLORS = [
-  'border-t-kanban-accent-1',
-  'border-t-kanban-accent-2',
-  'border-t-kanban-accent-3',
-  'border-t-kanban-accent-4',
-  'border-t-kanban-accent-5',
-  'border-t-kanban-accent-6',
-];
-
-function listAccent(id: string): string {
-  const hash = id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  return ACCENT_COLORS[hash % ACCENT_COLORS.length] ?? ACCENT_COLORS[0]!;
-}
-
 interface Props {
   list: ListResponse;
   onCardUpdate: (cardId: string, data: { title?: string; description?: string }) => Promise<void>;
@@ -90,7 +76,7 @@ export function KanbanList({
       <div
         ref={dragProvided?.innerRef}
         {...dragProvided?.draggableProps}
-        className={`flex flex-col w-72 shrink-0 bg-card shadow-md rounded-2xl p-3 gap-2 border-t-4 ${listAccent(list.id)}`}
+        className="flex flex-col w-72 shrink-0 bg-card shadow-md rounded-2xl p-3 gap-2"
       >
         <div
           {...dragProvided?.dragHandleProps}
