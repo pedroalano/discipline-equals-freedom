@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { localDateISO } from '@/lib/date';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { io, type Socket } from 'socket.io-client';
 import type {
@@ -38,6 +40,7 @@ export function KanbanBoard({ initialData }: Props) {
   const [doneCount, setDoneCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
+  const queryClient = useQueryClient();
 
   // Sync WS events into local state
   const applyCardMoved = useCallback((card: CardResponse) => {
@@ -185,6 +188,7 @@ export function KanbanBoard({ initialData }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ completed: true }),
         });
+        void queryClient.invalidateQueries({ queryKey: ['focus', localDateISO()] });
       }
     } catch {
       // Revert on error
@@ -248,6 +252,7 @@ export function KanbanBoard({ initialData }: Props) {
     if (res.ok) {
       const { card } = (await res.json()) as MoveToTodayResponse;
       applyCardUpdated(card);
+      void queryClient.invalidateQueries({ queryKey: ['focus', localDateISO()] });
     }
   }
 

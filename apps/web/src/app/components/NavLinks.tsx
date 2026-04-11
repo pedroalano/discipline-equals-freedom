@@ -8,10 +8,10 @@ import { usePomodoroStore } from '../../store/pomodoro';
 
 const NAV_ITEMS = [
   { key: 'today' as const, label: 'Today', icon: CalendarDays, angleDeg: 0 },
-  { key: 'boards' as const, label: 'Boards', icon: Kanban, angleDeg: 45 },
-  { key: 'profile' as const, label: 'Profile', icon: UserCircle, angleDeg: 90 },
+  { key: 'boards' as const, label: 'Boards', icon: Kanban, angleDeg: 30 },
+  { key: 'profile' as const, label: 'Profile', icon: UserCircle, angleDeg: 70 },
 ];
-const RADIUS = 72;
+const RADIUS = 82;
 
 function polar(deg: number, r: number) {
   const rad = (deg * Math.PI) / 180;
@@ -67,7 +67,7 @@ export function NavLinks() {
                   delay: i * 0.07,
                 }}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="w-6 h-6 shrink-0" />
                 {item.label}
               </motion.button>
             );
@@ -78,8 +78,8 @@ export function NavLinks() {
       <motion.button
         aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
         aria-expanded={isOpen}
-        className="relative z-10 flex h-6 w-6 items-center justify-center rounded-full text-white hover:text-white/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/50"
-        animate={{ rotate: isOpen ? 45 : 0 }}
+        className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-white hover:text-white/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/50"
+        animate={{ rotate: isOpen ? 65 : 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 22 }}
         whileTap={{ scale: 0.9 }}
       >

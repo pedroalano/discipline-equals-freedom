@@ -89,8 +89,11 @@ export function DailyList({ date, initialData }: Props) {
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
+      if (variables?.completed) {
+        void queryClient.invalidateQueries({ queryKey: ['board', 'modal'] });
+      }
     },
   });
 

@@ -7,12 +7,15 @@ import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import { localDateISO } from '@/lib/date';
 import { usePomodoroStore } from '../../store/pomodoro';
 
-async function fetchFocusItems(date: string): Promise<FocusItemResponse[]> {
+async function fetchFocusItems(date: string): Promise<FocusItemListResponse> {
   const res = await fetch(`/api/focus?date=${date}`);
   if (!res.ok) throw new Error('Failed to fetch focus items');
   const raw = (await res.json()) as unknown;
-  if (Array.isArray(raw)) return raw as FocusItemResponse[];
-  return ((raw as FocusItemListResponse).items ?? []) as FocusItemResponse[];
+  if (Array.isArray(raw)) {
+    const arr = raw as FocusItemResponse[];
+    return { items: arr, total: arr.length, completed: arr.filter((i) => i.completed).length };
+  }
+  return raw as FocusItemListResponse;
 }
 
 export function FocusPanel() {
@@ -27,9 +30,7 @@ export function FocusPanel() {
     queryKey: ['focus', date],
     queryFn: () => fetchFocusItems(date),
   });
-  const items: FocusItemResponse[] = Array.isArray(data)
-    ? data
-    : ((data as FocusItemListResponse | undefined)?.items ?? []);
+  const items: FocusItemResponse[] = data?.items ?? [];
 
   const createMutation = useMutation({
     mutationFn: async (itemText: string) => {
@@ -57,8 +58,11 @@ export function FocusPanel() {
       if (!res.ok) throw new Error('Failed to update item');
       return res.json() as Promise<FocusItemResponse>;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['focus', date] });
+      if (variables.completed) {
+        void queryClient.invalidateQueries({ queryKey: ['board', 'modal'] });
+      }
     },
   });
 
@@ -69,12 +73,14 @@ export function FocusPanel() {
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['focus', date] });
-      const prev = queryClient.getQueryData<FocusItemResponse[]>(['focus', date]);
+      const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
       if (prev) {
-        queryClient.setQueryData<FocusItemResponse[]>(
-          ['focus', date],
-          prev.filter((i) => i.id !== id),
-        );
+        const nextItems = prev.items.filter((i) => i.id !== id);
+        queryClient.setQueryData<FocusItemListResponse>(['focus', date], {
+          items: nextItems,
+          total: nextItems.length,
+          completed: nextItems.filter((i) => i.completed).length,
+        });
       }
       return { prev };
     },
