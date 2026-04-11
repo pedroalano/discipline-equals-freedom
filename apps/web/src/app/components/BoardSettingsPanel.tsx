@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import type { BoardSummaryResponse } from '@zenfocus/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ interface BoardSettingsPanelProps {
 
 export function BoardSettingsPanel({ board, onClose, onDeleteSuccess }: BoardSettingsPanelProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState(board.title);
   const [description, setDescription] = useState(board.description ?? '');
   const [color, setColor] = useState<string | null>(board.color);
@@ -50,7 +52,9 @@ export function BoardSettingsPanel({ board, onClose, onDeleteSuccess }: BoardSet
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: title.trim() || board.title, description, color }),
     });
-    router.refresh();
+    setSaving(false);
+    void queryClient.invalidateQueries({ queryKey: ['boards', 'modal'] });
+    void queryClient.invalidateQueries({ queryKey: ['board', 'modal', board.id] });
     onClose();
   }
 

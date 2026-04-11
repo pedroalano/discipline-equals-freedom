@@ -134,6 +134,7 @@ export function KanbanBoard({ initialData }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ position: newPosition }),
         });
+        void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
       } catch {
         setLists(prev);
       }
@@ -190,6 +191,7 @@ export function KanbanBoard({ initialData }: Props) {
         });
         void queryClient.invalidateQueries({ queryKey: ['focus', localDateISO()] });
       }
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     } catch {
       // Revert on error
       applyCardMoved(movedCard);
@@ -205,12 +207,14 @@ export function KanbanBoard({ initialData }: Props) {
     if (res.ok) {
       const card = (await res.json()) as CardResponse;
       applyCardUpdated(card);
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     }
   }
 
   async function handleCardDelete(cardId: string) {
     applyCardDeleted(cardId);
     await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
+    void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
   }
 
   async function handleCardCreate(listId: string, title: string) {
@@ -222,12 +226,14 @@ export function KanbanBoard({ initialData }: Props) {
     if (res.ok) {
       const card = (await res.json()) as CardResponse;
       applyCardCreated(card);
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     }
   }
 
   async function handleListDelete(listId: string) {
     setLists((prev) => prev.filter((l) => l.id !== listId));
     await fetch(`/api/lists/${listId}`, { method: 'DELETE' });
+    void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
   }
 
   async function handleListUpdate(listId: string, data: { title: string }) {
@@ -239,6 +245,7 @@ export function KanbanBoard({ initialData }: Props) {
     if (res.ok) {
       const updated = (await res.json()) as ListResponse;
       setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, title: updated.title } : l)));
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     }
   }
 
@@ -253,6 +260,7 @@ export function KanbanBoard({ initialData }: Props) {
       const { card } = (await res.json()) as MoveToTodayResponse;
       applyCardUpdated(card);
       void queryClient.invalidateQueries({ queryKey: ['focus', localDateISO()] });
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     }
   }
 
@@ -268,6 +276,7 @@ export function KanbanBoard({ initialData }: Props) {
     if (res.ok) {
       const newList = (await res.json()) as ListResponse;
       setLists((prev) => [...prev, newList].sort((a, b) => a.position - b.position));
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     }
     setNewListTitle('');
     setAddingList(false);
