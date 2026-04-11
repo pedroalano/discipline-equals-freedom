@@ -35,7 +35,7 @@ export function NavLinks() {
 
   return (
     <div
-      className={`absolute top-6 left-12 z-10 transition-opacity duration-500 ${
+      className={`absolute top-8 left-12 z-10 transition-opacity duration-500 ${
         isPomodoro ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       onMouseEnter={handleMouseEnter}
