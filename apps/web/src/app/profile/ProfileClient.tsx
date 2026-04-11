@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ProfileResponse } from '@zenfocus/types';
 import { UpdateNameForm } from './UpdateNameForm';
 import { UpdatePasswordForm } from './UpdatePasswordForm';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ProfileClient({ initialProfile }: Props) {
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<ProfileResponse>(initialProfile);
 
   return (
@@ -50,7 +52,13 @@ export function ProfileClient({ initialProfile }: Props) {
       {/* Update name */}
       <section>
         <h2 className="text-lg font-semibold text-foreground mb-4">Display Name</h2>
-        <UpdateNameForm currentName={profile.name} onSuccess={(updated) => setProfile(updated)} />
+        <UpdateNameForm
+          currentName={profile.name}
+          onSuccess={(updated) => {
+            setProfile(updated);
+            queryClient.setQueryData<ProfileResponse>(['profile', 'modal'], updated);
+          }}
+        />
       </section>
 
       <Separator />
