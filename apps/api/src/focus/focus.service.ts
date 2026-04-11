@@ -15,15 +15,21 @@ export class FocusService {
 
   async getByDate(userId: string, dateStr: string): Promise<FocusItemListResponse> {
     const dayDate = new Date(dateStr + 'T00:00:00.000Z');
+    const todayStr = new Date().toISOString().substring(0, 10);
+
+    // Generate habit items for today (idempotent — skips already-created ones).
+    if (dateStr === todayStr) {
+      await this.ensureHabitsGenerated(userId, dayDate, dateStr);
+    }
 
     let items = await this.prisma.focusItem.findMany({
       where: { userId, date: dayDate },
       orderBy: { position: 'asc' },
     });
 
-    // Carry-over: when today has no items, bring forward yesterday's incomplete items.
+    // Carry-over: when today has no one-time items, bring forward yesterday's incomplete tasks.
+    // Habit items are excluded — they auto-generate via ensureHabitsGenerated.
     // Guard with lastCarryOverDate so this fires at most once per day — not on every GET.
-    const todayStr = new Date().toISOString().substring(0, 10);
     if (items.length === 0 && dateStr === todayStr) {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -37,7 +43,7 @@ export class FocusService {
         yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
         const incomplete = await this.prisma.focusItem.findMany({
-          where: { userId, date: yesterday, completed: false },
+          where: { userId, date: yesterday, completed: false, habitId: null },
           orderBy: { position: 'asc' },
         });
 
@@ -156,6 +162,60 @@ export class FocusService {
     await this.prisma.focusItem.delete({ where: { id } });
   }
 
+  private async ensureHabitsGenerated(
+    userId: string,
+    dayDate: Date,
+    dateStr: string,
+  ): Promise<void> {
+    const dayOfWeek = dayDate.getUTCDay(); // 0=Sun … 6=Sat
+
+    const activeHabits = await this.prisma.habit.findMany({
+      where: { userId, isActive: true },
+    });
+
+    const scheduledHabits = activeHabits.filter((h) => {
+      if (h.frequency === 'DAILY') return true;
+      if (!h.customDays) return false;
+      const days = h.customDays.split(',').map(Number);
+      return days.includes(dayOfWeek);
+    });
+
+    if (scheduledHabits.length === 0) return;
+
+    const existingHabitIds = (
+      await this.prisma.focusItem.findMany({
+        where: {
+          userId,
+          date: dayDate,
+          habitId: { in: scheduledHabits.map((h) => h.id) },
+        },
+        select: { habitId: true },
+      })
+    )
+      .map((i) => i.habitId)
+      .filter((id): id is string => id !== null);
+
+    const toGenerate = scheduledHabits.filter((h) => !existingHabitIds.includes(h.id));
+    if (toGenerate.length === 0) return;
+
+    const last = await this.prisma.focusItem.findFirst({
+      where: { userId, date: dayDate },
+      orderBy: { position: 'desc' },
+    });
+    const startPosition = last ? last.position + 1 : 0;
+
+    await this.prisma.focusItem.createMany({
+      data: toGenerate.map((h, idx) => ({
+        userId,
+        text: h.name,
+        date: new Date(dateStr + 'T00:00:00.000Z'),
+        completed: false,
+        position: startPosition + idx,
+        habitId: h.id,
+      })),
+    });
+  }
+
   private format(item: FocusItem): FocusItemResponse {
     return {
       id: item.id,
@@ -165,6 +225,7 @@ export class FocusService {
       completed: item.completed,
       position: item.position,
       createdAt: item.createdAt.toISOString(),
+      habitId: item.habitId ?? null,
     };
   }
 }

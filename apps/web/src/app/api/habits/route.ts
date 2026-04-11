@@ -1,0 +1,27 @@
+import { NextResponse, type NextRequest } from 'next/server';
+
+const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
+
+function bearerHeaders(req: NextRequest): HeadersInit {
+  const token = req.cookies.get('access_token')?.value ?? '';
+  return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+
+export async function GET(req: NextRequest) {
+  const res = await fetch(`${API_URL}/habits`, {
+    headers: bearerHeaders(req),
+  });
+  const data = (await res.json()) as unknown;
+  return NextResponse.json(data, { status: res.status });
+}
+
+export async function POST(req: NextRequest) {
+  const body = (await req.json()) as unknown;
+  const res = await fetch(`${API_URL}/habits`, {
+    method: 'POST',
+    headers: bearerHeaders(req),
+    body: JSON.stringify(body),
+  });
+  const data = (await res.json()) as unknown;
+  return NextResponse.json(data, { status: res.status });
+}
