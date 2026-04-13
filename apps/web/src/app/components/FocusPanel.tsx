@@ -34,8 +34,8 @@ export function FocusPanel() {
     queryFn: () => fetchFocusItems(date),
   });
   const items: FocusItemResponse[] = data?.items ?? [];
-  const habitItems = items.filter((i) => i.habitId !== null);
-  const taskItems = items.filter((i) => i.habitId === null);
+  const habitItems = items.filter((i) => i.habitId !== null && !i.completed);
+  const taskItems = items.filter((i) => i.habitId === null && !i.completed);
 
   const createMutation = useMutation({
     mutationFn: async (itemText: string) => {
@@ -276,9 +276,9 @@ export function FocusPanel() {
         </div>
       )}
 
-      {items.length === 0 && !isLoading && (
+      {!isLoading && habitItems.length === 0 && taskItems.length === 0 && (
         <p className="select-none py-6 text-center text-base text-white/30">
-          What matters most today?
+          {items.length > 0 ? 'All done for today!' : 'What matters most today?'}
         </p>
       )}
 
