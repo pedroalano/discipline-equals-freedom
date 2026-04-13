@@ -6,6 +6,7 @@ import { PomodoroButton } from './PomodoroButton';
 import { usePomodoroStore } from '../../store/pomodoro';
 import type { TimerPhase } from '../../store/pomodoro';
 import { Button } from '@/components/ui/button';
+import { Pause, Play, SkipForward, Square } from 'lucide-react';
 
 function getGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -115,19 +116,45 @@ export function ClockGreeting({ name }: { name?: string }) {
           </div>
 
           {/* Controls */}
-          <div className="mt-1 flex gap-3">
+          <div className="mt-1 flex items-center gap-4">
+            {/* Primary action */}
             <Button
               variant="glass"
+              className="px-8"
               onClick={status === 'running' ? pause : resume}
               aria-label={status === 'running' ? 'Pause' : 'Resume'}
             >
-              {status === 'running' ? '⏸' : '▶'} {status === 'running' ? 'Pause' : 'Resume'}
+              {status === 'running' ? (
+                <>
+                  <Pause className="mr-2 h-4 w-4" /> Pause
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" /> Resume
+                </>
+              )}
             </Button>
-            <Button variant="glass" onClick={skip} aria-label="Skip to next phase">
-              ⏭ Skip
+
+            {/* Skip — icon only */}
+            <Button
+              variant="glass"
+              size="icon"
+              className="rounded-full"
+              onClick={skip}
+              aria-label="Skip to next phase"
+            >
+              <SkipForward className="h-4 w-4" />
             </Button>
-            <Button variant="glass" onClick={stop} aria-label="Stop timer">
-              ✕ Stop
+
+            {/* Stop — icon only, red tint */}
+            <Button
+              variant="glass"
+              size="icon"
+              className="rounded-full bg-red-500/10 text-red-300/80 hover:bg-red-500/20 hover:text-red-200"
+              onClick={stop}
+              aria-label="Stop timer"
+            >
+              <Square className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -149,10 +176,12 @@ export function ClockGreeting({ name }: { name?: string }) {
         </div>
       )}
 
-      <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
-        {now ? getGreeting(now.getHours()) : ''}
-        {now && name ? `, ${name}` : ''}
-      </p>
+      {!isActive && (
+        <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
+          {now ? getGreeting(now.getHours()) : ''}
+          {now && name ? `, ${name}` : ''}
+        </p>
+      )}
     </div>
   );
 }

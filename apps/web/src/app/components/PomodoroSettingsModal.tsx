@@ -2,6 +2,7 @@
 
 import { usePomodoroStore } from '../../store/pomodoro';
 import type { SoundType } from '../../store/pomodoro';
+import { X, Timer } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -34,19 +35,24 @@ export function PomodoroSettingsModal({ onClose }: Props) {
         aria-label="Pomodoro settings"
       >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-cormorant text-xl font-light tracking-wide">Timer Settings</h2>
+          <h2 className="flex items-center gap-2 font-cormorant text-xl font-light tracking-wide">
+            <Timer className="h-4 w-4 text-white/60" />
+            Timer Settings
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-white/50 hover:text-white transition-colors text-lg leading-none"
+            className="text-white/50 hover:text-white transition-colors"
             aria-label="Close settings"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="space-y-5 text-sm">
-          {/* Work duration */}
+          {/* TIMER section */}
+          <p className="text-xs font-medium tracking-widest text-white/40 uppercase">Timer</p>
+
           <SliderRow
             label="Work"
             value={settings.workDuration}
@@ -55,8 +61,6 @@ export function PomodoroSettingsModal({ onClose }: Props) {
             unit="min"
             onChange={(v) => updateSettings({ workDuration: v })}
           />
-
-          {/* Short break */}
           <SliderRow
             label="Short Break"
             value={settings.shortBreakDuration}
@@ -65,8 +69,6 @@ export function PomodoroSettingsModal({ onClose }: Props) {
             unit="min"
             onChange={(v) => updateSettings({ shortBreakDuration: v })}
           />
-
-          {/* Long break */}
           <SliderRow
             label="Long Break"
             value={settings.longBreakDuration}
@@ -75,8 +77,6 @@ export function PomodoroSettingsModal({ onClose }: Props) {
             unit="min"
             onChange={(v) => updateSettings({ longBreakDuration: v })}
           />
-
-          {/* Sessions before long break */}
           <SliderRow
             label="Sessions before long break"
             value={settings.sessionsBeforeLong}
@@ -88,7 +88,9 @@ export function PomodoroSettingsModal({ onClose }: Props) {
 
           <hr className="border-white/10" />
 
-          {/* Auto-start toggles */}
+          {/* AUTO-START section */}
+          <p className="text-xs font-medium tracking-widest text-white/40 uppercase">Auto-start</p>
+
           <ToggleRow
             label="Auto-start breaks"
             checked={settings.autoStartBreak}
@@ -102,28 +104,26 @@ export function PomodoroSettingsModal({ onClose }: Props) {
 
           <hr className="border-white/10" />
 
-          {/* Sound selector */}
-          <div>
-            <span className="mb-1.5 block text-white/70">Ambient sound</span>
-            <div className="flex gap-2 flex-wrap">
-              {SOUND_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => updateSettings({ soundType: opt.value })}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    settings.soundType === opt.value
-                      ? 'bg-white/20 text-white'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+          {/* SOUND section */}
+          <p className="text-xs font-medium tracking-widest text-white/40 uppercase">Sound</p>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            {SOUND_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => updateSettings({ soundType: opt.value })}
+                className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                  settings.soundType === opt.value
+                    ? 'border-white/30 bg-white/15 text-white'
+                    : 'border-transparent bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
 
-          {/* Volume */}
           {settings.soundType !== 'none' && (
             <SliderRow
               label="Volume"
@@ -134,8 +134,6 @@ export function PomodoroSettingsModal({ onClose }: Props) {
               onChange={(v) => updateSettings({ soundVolume: v / 100 })}
             />
           )}
-
-          {/* Sound during breaks */}
           {settings.soundType !== 'none' && (
             <ToggleRow
               label="Sound during breaks"
@@ -143,8 +141,6 @@ export function PomodoroSettingsModal({ onClose }: Props) {
               onChange={(v) => updateSettings({ soundDuringBreaks: v })}
             />
           )}
-
-          {/* Tick sound */}
           <ToggleRow
             label="Tick sound"
             checked={settings.tickEnabled}

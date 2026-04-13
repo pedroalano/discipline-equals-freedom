@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePomodoroStore } from '../../store/pomodoro';
 import { Button } from '@/components/ui/button';
+import { Settings, Volume2 } from 'lucide-react';
 import { usePomodoroTimer } from '../../hooks/usePomodoroTimer';
 import { useAudioEngine } from '../../hooks/useAudioEngine';
 import { useTabTitle } from '../../hooks/useTabTitle';
@@ -50,7 +51,7 @@ export function PomodoroIsland() {
         {/* Live volume slider when sound is playing */}
         {settings.soundType !== 'none' && isRunning && (
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/60 backdrop-blur-sm">
-            <span>🔊</span>
+            <Volume2 className="h-3 w-3 shrink-0" />
             <input
               type="range"
               min={0}
@@ -77,7 +78,7 @@ export function PomodoroIsland() {
             onClick={() => setShowSettings(true)}
             aria-label="Open timer settings"
           >
-            ⚙
+            <Settings className="h-4 w-4" />
           </Button>
         )}
       </div>
