@@ -3,6 +3,10 @@
 import { usePomodoroStore } from '../../store/pomodoro';
 import type { SoundType } from '../../store/pomodoro';
 import { X, Timer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface Props {
   onClose: () => void;
@@ -39,14 +43,16 @@ export function PomodoroSettingsModal({ onClose }: Props) {
             <Timer className="h-4 w-4 text-white/60" />
             Timer Settings
           </h2>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-white/50 hover:text-white transition-colors"
+            className="h-6 w-6 text-white/50 hover:text-white hover:bg-transparent"
             aria-label="Close settings"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-5 text-sm">
@@ -107,22 +113,24 @@ export function PomodoroSettingsModal({ onClose }: Props) {
           {/* SOUND section */}
           <p className="text-xs font-medium tracking-widest text-white/40 uppercase">Sound</p>
 
-          <div className="grid grid-cols-2 gap-1.5">
+          <ToggleGroup
+            type="single"
+            value={settings.soundType}
+            onValueChange={(v) => {
+              if (v) updateSettings({ soundType: v as SoundType });
+            }}
+            className="grid grid-cols-2 gap-1.5"
+          >
             {SOUND_OPTIONS.map((opt) => (
-              <button
+              <ToggleGroupItem
                 key={opt.value}
-                type="button"
-                onClick={() => updateSettings({ soundType: opt.value })}
-                className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-                  settings.soundType === opt.value
-                    ? 'border-white/30 bg-white/15 text-white'
-                    : 'border-transparent bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
-                }`}
+                value={opt.value}
+                className="rounded-lg border border-transparent bg-white/5 text-xs font-medium text-white/50 data-[state=on]:border-white/30 data-[state=on]:bg-white/15 data-[state=on]:text-white hover:bg-white/10 hover:text-white/80"
               >
                 {opt.label}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
 
           {settings.soundType !== 'none' && (
             <SliderRow
@@ -176,13 +184,11 @@ function SliderRow({
           {unit}
         </span>
       </div>
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-white/80"
+        value={[value]}
+        onValueChange={(vals) => onChange(vals[0]!)}
         aria-label={label}
       />
     </div>
@@ -201,22 +207,7 @@ function ToggleRow({
   return (
     <div className="flex items-center justify-between">
       <span className="text-white/70">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-5 w-9 rounded-full transition-colors ${
-          checked ? 'bg-white/40' : 'bg-white/10'
-        }`}
-        aria-label={label}
-      >
-        <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-4' : 'translate-x-0.5'
-          }`}
-        />
-      </button>
+      <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }
