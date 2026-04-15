@@ -155,7 +155,7 @@ export const usePomodoroStore = create<PomodoroState>()(
         set({
           phase: next,
           secondsLeft,
-          sessionsDoneThisSet: next === 'work' ? 0 : newSessionsDone,
+          sessionsDoneThisSet: newSessionsDone,
           status: shouldAutoStart ? 'running' : 'paused',
           dailyCount: newDailyCount,
           dailyCountDate: today,
