@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePomodoroStore } from '../../store/pomodoro';
 import { Button } from '@/components/ui/button';
-import { Settings, Volume2 } from 'lucide-react';
+import { Settings, Volume2, VolumeX } from 'lucide-react';
 import { usePomodoroTimer } from '../../hooks/usePomodoroTimer';
 import { useAudioEngine } from '../../hooks/useAudioEngine';
 import { useTabTitle } from '../../hooks/useTabTitle';
@@ -51,7 +51,21 @@ export function PomodoroIsland() {
         {/* Live volume slider when sound is playing */}
         {settings.soundType !== 'none' && isRunning && (
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/60 backdrop-blur-sm">
-            <Volume2 className="h-3 w-3 shrink-0" />
+            <button
+              type="button"
+              onClick={() =>
+                usePomodoroStore.getState().updateSettings({ soundMuted: !settings.soundMuted })
+              }
+              className={`shrink-0 cursor-pointer rounded p-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${settings.soundMuted ? 'text-red-400 hover:text-red-300' : 'hover:text-white/90'}`}
+              aria-label={settings.soundMuted ? 'Unmute sound' : 'Mute sound'}
+              aria-pressed={settings.soundMuted}
+            >
+              {settings.soundMuted ? (
+                <VolumeX className="h-3 w-3" />
+              ) : (
+                <Volume2 className="h-3 w-3" />
+              )}
+            </button>
             <input
               type="range"
               min={0}
