@@ -14,6 +14,7 @@ export interface PomodoroSettings {
   autoStartWork: boolean;
   soundType: SoundType;
   soundVolume: number;
+  soundMuted: boolean;
   soundDuringBreaks: boolean;
   tickEnabled: boolean;
 }
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   autoStartWork: false,
   soundType: 'none',
   soundVolume: 0.3,
+  soundMuted: false,
   soundDuringBreaks: false,
   tickEnabled: false,
 };

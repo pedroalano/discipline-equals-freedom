@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   autoStartWork: false,
   soundType: 'none',
   soundVolume: 0.3,
+  soundMuted: false,
   soundDuringBreaks: false,
   tickEnabled: false,
 };

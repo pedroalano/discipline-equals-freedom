@@ -18,14 +18,15 @@ export function useAudioEngine() {
   // Start/stop noise based on running state and phase
   useEffect(() => {
     const engine = engineRef.current;
-    const { soundType, soundVolume, soundDuringBreaks } = settings;
+    const { soundType, soundVolume, soundMuted, soundDuringBreaks } = settings;
+    const effectiveVolume = soundMuted ? 0 : soundVolume;
 
     const isWork = phase === 'work';
     const shouldPlay =
       status === 'running' && soundType !== 'none' && (isWork || soundDuringBreaks);
 
     if (shouldPlay) {
-      engine.start(soundType, soundVolume);
+      engine.start(soundType, effectiveVolume);
     } else {
       engine.stop();
     }
@@ -37,8 +38,9 @@ export function useAudioEngine() {
 
   // Volume updates without restarting
   useEffect(() => {
-    engineRef.current.setVolume(settings.soundVolume);
-  }, [settings.soundVolume]);
+    const effectiveVolume = settings.soundMuted ? 0 : settings.soundVolume;
+    engineRef.current.setVolume(effectiveVolume);
+  }, [settings.soundVolume, settings.soundMuted]);
 
   // Tick sound
   useEffect(() => {
