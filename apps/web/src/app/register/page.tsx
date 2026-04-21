@@ -28,31 +28,19 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const registerRes = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed.data),
       });
 
-      if (!registerRes.ok) {
-        const data = (await registerRes.json()) as { message?: string };
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
         setError(data.message ?? 'Registration failed');
         return;
       }
 
-      // Auto-login after registration
-      const loginRes = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data),
-      });
-
-      if (!loginRes.ok) {
-        router.push('/login');
-        return;
-      }
-
-      router.push('/');
+      router.push('/verify-email');
       router.refresh();
     } catch {
       setError('Network error — please try again');
@@ -100,7 +88,7 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm text-neutral-400">
-              Password (8+ characters)
+              Password (8+ chars, uppercase, lowercase, digit)
             </label>
             <input
               id="password"

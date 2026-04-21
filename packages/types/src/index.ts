@@ -17,6 +17,7 @@ export interface UserResponse {
   id: string;
   email: string;
   name?: string | null;
+  emailVerified: boolean;
   createdAt: string;
 }
 
@@ -24,6 +25,36 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: UserResponse;
+}
+
+// ── Email Verification ───────────────────────────────────────────────────────
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+}
+
+// ── Password Reset ───────────────────────────────────────────────────────────
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
 }
 
 // ── DailyImage ────────────────────────────────────────────────────────────────
@@ -221,10 +252,18 @@ export interface UpdatePasswordRequest {
 
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 
+const strongPassword = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+    'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+  );
+
 export const registerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100).optional(),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: strongPassword,
 });
 
 export const loginSchema = z.object({
@@ -261,7 +300,7 @@ export const updateNameSchema = z.object({
 export const updatePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+    newPassword: strongPassword,
     confirmPassword: z.string().min(1, 'Please confirm your new password'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -274,3 +313,26 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type CreateFocusItemFormData = z.infer<typeof createFocusItemSchema>;
 export type UpdateNameFormData = z.infer<typeof updateNameSchema>;
 export type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1),
+    newPassword: strongPassword,
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;

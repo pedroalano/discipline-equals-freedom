@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Phases 0, 1, and 2 complete, plus Pomodoro timer. Auth + Zen Core MVP, Kanban Engine, and Pomodoro focus timer are fully implemented. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
+Phases 0, 1, and 2 complete, plus Pomodoro timer. Auth + Zen Core MVP, Kanban Engine, and Pomodoro focus timer are fully implemented. Auth system includes email verification (Resend API), password reset flow, account lockout (5 failed attempts / 15min), and strong password requirements. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
 
 ## Monorepo Structure
 
@@ -58,7 +58,13 @@ pnpm turbo run test
 
 ### Auth
 
-JWT access tokens (15m TTL) are stateless. Refresh tokens are stored as bcrypt hashes in Redis (7d TTL, rotated on use) — this enables revocation without stateful sessions. Never store plaintext tokens. A NestJS JWT guard is applied globally; use a `@Public()` decorator to opt out on specific routes.
+JWT access tokens (15m TTL) are stateless and include `emailVerified` claim. Refresh tokens are stored as bcrypt hashes in Redis (7d TTL, rotated on use) — this enables revocation without stateful sessions. Never store plaintext tokens. A NestJS JWT guard is applied globally; use a `@Public()` decorator to opt out on specific routes, or `@SkipEmailVerification()` for routes accessible to unverified users.
+
+**Email verification:** New users receive a verification email via Resend API. Tokens are `crypto.randomBytes(32)` stored as SHA-256 hashes in Redis (24h TTL). Unverified users are blocked by a global `EmailVerifiedGuard` from all routes except verify-email, resend-verification, logout, refresh, and GET /users/me.
+
+**Password reset:** Forgot-password generates a token (1h TTL in Redis), sends email, and always returns the same response (no email enumeration). Reset invalidates all sessions.
+
+**Account lockout:** 5 failed login attempts per email triggers 15-minute lockout via Redis counter.
 
 ### Real-time
 
