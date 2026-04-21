@@ -54,6 +54,9 @@ services:
       NODE_ENV: development
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@example.com}
+      APP_URL: ${APP_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy

@@ -27,6 +27,17 @@ export class UsersService {
     return this.prisma.user.create({ data: { email, passwordHash, name } });
   }
 
+  async markEmailVerified(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true, emailVerifiedAt: new Date() },
+    });
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  }
+
   async getProfile(userId: string): Promise<ProfileResponse> {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },

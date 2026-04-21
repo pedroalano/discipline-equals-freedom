@@ -13,7 +13,9 @@ import { BoardModule } from './board/board.module';
 import { ListModule } from './list/list.module';
 import { CardModule } from './card/card.module';
 import { HabitModule } from './habit/habit.module';
+import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
 
 @Module({
   imports: [
@@ -29,11 +31,13 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     ListModule,
     CardModule,
     HabitModule,
+    EmailModule,
   ],
   controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: EmailVerifiedGuard },
   ],
 })
 export class AppModule {}

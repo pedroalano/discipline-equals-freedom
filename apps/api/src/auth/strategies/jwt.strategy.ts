@@ -7,6 +7,7 @@ import type { RequestUser } from '../decorators/current-user.decorator';
 interface JwtPayload {
   sub: string;
   email: string;
+  emailVerified: boolean;
 }
 
 @Injectable()
@@ -20,6 +21,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload): RequestUser {
-    return { id: payload.sub, email: payload.email };
+    return { id: payload.sub, email: payload.email, emailVerified: payload.emailVerified };
   }
 }
