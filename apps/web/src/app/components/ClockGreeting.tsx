@@ -97,7 +97,7 @@ export function ClockGreeting({ name }: { name?: string }) {
             role="timer"
             aria-live="off"
             aria-label={`${formatSeconds(secondsLeft)} remaining`}
-            className="text-9xl font-cormorant font-thin tracking-widest text-white drop-shadow"
+            className="text-9xl font-display font-thin tracking-widest text-white drop-shadow"
           >
             {formatSeconds(secondsLeft)}
           </p>
@@ -163,7 +163,7 @@ export function ClockGreeting({ name }: { name?: string }) {
           <AnimatePresence mode="wait">
             <motion.p
               key={time}
-              className="text-9xl font-cormorant font-thin tracking-widest text-white drop-shadow"
+              className="text-9xl font-display font-thin tracking-widest text-white drop-shadow"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
@@ -177,7 +177,7 @@ export function ClockGreeting({ name }: { name?: string }) {
       )}
 
       {!isActive && (
-        <p className="mt-2 text-4xl font-cormorant font-light tracking-wide text-white drop-shadow">
+        <p className="mt-2 text-4xl font-display font-light tracking-wide text-white drop-shadow">
           {now ? getGreeting(now.getHours()) : ''}
           {now && name ? `, ${name}` : ''}
         </p>

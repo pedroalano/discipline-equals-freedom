@@ -39,7 +39,7 @@ export function PomodoroSettingsModal({ onClose }: Props) {
         aria-label="Pomodoro settings"
       >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 font-cormorant text-xl font-light tracking-wide">
+          <h2 className="flex items-center gap-2 font-display text-xl font-light tracking-wide">
             <Timer className="h-4 w-4 text-white/60" />
             Timer Settings
           </h2>
