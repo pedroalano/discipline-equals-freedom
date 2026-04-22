@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Phases 0, 1, and 2 complete, plus Pomodoro timer. Auth + Zen Core MVP, Kanban Engine, and Pomodoro focus timer are fully implemented. Auth system includes email verification (Resend API), password reset flow, account lockout (5 failed attempts / 15min), and strong password requirements. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
+Phases 0, 1, and 2 complete, plus Pomodoro timer, Habits system, and Profile page. Auth + Zen Core MVP, Kanban Engine, Pomodoro focus timer, habit tracking with streak badges, and user profile management are fully implemented. Auth system includes email verification (Resend API), password reset flow, account lockout (5 failed attempts / 15min), and strong password requirements. Run `pnpm install` once on host for IDE intellisense, then use Docker for all app processes.
 
 ## Monorepo Structure
 
@@ -70,6 +70,14 @@ JWT access tokens (15m TTL) are stateless and include `emailVerified` claim. Ref
 
 WebSockets (Socket.io) are scoped to board card sync only — not used for focus items or auth. Cards broadcast moves/edits to all clients joined to the same board "room". Conflict resolution is last-write-wins by server timestamp.
 
+### Habits
+
+Habit CRUD with `DAILY` or `CUSTOM` frequency (specific weekdays via `customDays` JSON). Active habits auto-generate FocusItems for the current day via `ensureHabitsGenerated()` — called on focus item list requests. FocusItems link back to their source habit via `habitId` (FK, `onDelete: SetNull` so completed items survive habit deletion). Streaks are computed from consecutive completed FocusItems sharing the same `habitId`. Frontend displays habits in a dedicated section above tasks with streak badges.
+
+### Profile
+
+User profile endpoints: update display name (`PATCH /users/me`), change password (requires current password verification), and delete account (cascades all user data). Profile page also displays account stats.
+
 ### Backend patterns
 
 - Controllers are thin: validation via `class-validator` DTOs, logic in services, no business logic in controllers.
@@ -79,7 +87,8 @@ WebSockets (Socket.io) are scoped to board card sync only — not used for focus
 ### Frontend patterns
 
 - React Server Components handle initial data fetching. Client Components handle real-time surfaces and interactivity.
-- Zustand is for ephemeral client-only state. Server state (boards, cards, focus items) goes through React Query or SWR.
+- UI components use shadcn/ui (Radix primitives + Tailwind). Feature navigation uses a radial target icon menu with modal-based views.
+- Zustand is for ephemeral client-only state. Server state (boards, cards, focus items, habits) goes through React Query or SWR.
 - The Pomodoro store (`apps/web/src/store/pomodoro.ts`) uses Zustand with `persist` middleware (localStorage). It holds settings, daily count, and daily count date. Runtime timer state is not persisted and resets on load. No backend is involved — see ADR 005.
 - Unsplash API calls are server-side only — the API key must never reach the client bundle.
 
