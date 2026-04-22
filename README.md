@@ -81,14 +81,18 @@ pnpm turbo run lint typecheck
 - **Real-time:** Socket.io scoped to board card sync only. Conflict resolution is last-write-wins by server timestamp.
 - **Type safety:** `packages/types` is the single source of truth for all network shapes. Both apps import from it; neither defines its own copy.
 - **Pomodoro timer:** Fully client-side — Zustand store with `persist` middleware (localStorage). Tracks work/break sessions, daily count, ambient sounds, and configurable durations with no backend dependency.
+- **Habits:** CRUD with daily or custom-weekday frequency. Active habits auto-generate FocusItems each day. Streak tracking with badges.
+- **Profile:** Display name update, password change, account deletion with cascade.
+- **Auth hardening:** Email verification (Resend API), password reset flow, account lockout (5 failed attempts / 15min).
 - **Testing:** Unit tests (Jest) on service logic, integration tests (Jest + Supertest) against a real test database, E2E (Playwright) on critical paths.
 
 ## Development roadmap
 
-| Phase | Focus                                                                           | Status   |
-| ----- | ------------------------------------------------------------------------------- | -------- |
-| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI                        | Complete |
-| 1     | Auth, daily focus items, Unsplash background, protected routes                  | Complete |
-| 2     | Kanban board, drag-and-drop, real-time card sync                                | Complete |
-| 2+    | Pomodoro timer, ambient sound engine, session notifications, keyboard shortcuts | Complete |
-| 3     | PWA, Chrome Extension, analytics                                                | Planned  |
+| Phase | Focus                                                                                  | Status   |
+| ----- | -------------------------------------------------------------------------------------- | -------- |
+| 0     | Monorepo scaffold, Docker environment, Prisma schema, CI                               | Complete |
+| 1     | Auth, daily focus items, Unsplash background, protected routes                         | Complete |
+| 2     | Kanban board, drag-and-drop, real-time card sync                                       | Complete |
+| 2+    | Pomodoro timer, ambient sound engine, session notifications, keyboard shortcuts        | Complete |
+| 2++   | Habits with streaks, user profile, email verification, password reset, account lockout | Complete |
+| 3     | PWA, Chrome Extension, analytics                                                       | Planned  |

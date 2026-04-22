@@ -78,12 +78,13 @@ packages/
 ### Core Data Model (simplified)
 
 ```
-User           → id, email, passwordHash, createdAt
-RefreshToken   → id, userId, tokenHash, expiresAt
-FocusItem      → id, userId, text, date, completed
-Board          → id, userId, title, createdAt
-List           → id, boardId, title, position
-Card           → id, listId, title, description, position, updatedAt
+User           → id, email, passwordHash, name?, emailVerified, emailVerifiedAt?, createdAt, updatedAt, lastCarryOverDate?
+RefreshToken   → id, userId, tokenHash, expiresAt, createdAt
+FocusItem      → id, userId, text, date, completed, position, habitId?, createdAt
+Habit          → id, userId, name, description?, frequency (DAILY|CUSTOM), customDays?, isActive, position, createdAt, updatedAt
+Board          → id, userId, title, description?, color?, createdAt, updatedAt
+List           → id, boardId, title, position, createdAt
+Card           → id, listId, title, description?, position, isToday, focusItemId?, createdAt, updatedAt
 ```
 
 ---
@@ -112,8 +113,12 @@ Card           → id, listId, title, description, position, updatedAt
 - [x] Clock & Greeting: typography-first, timezone-aware, SSR-rendered
 - [x] FocusItem CRUD: create today's focus, mark complete, persist per user per day
 - [x] Protected Next.js routes with session (next-auth or custom JWT cookie strategy)
+- [x] Email verification via Resend API (SHA-256 hashed tokens in Redis, 24h TTL)
+- [x] Password reset flow (1h token TTL, invalidates all sessions on reset)
+- [x] Account lockout (5 failed login attempts → 15-minute lockout via Redis counter)
+- [x] Strong password requirements (8+ chars, uppercase, lowercase, digit)
 
-**Exit criteria:** A user can register, log in, set a daily focus item, and see it persist on page refresh. Auth tokens rotate correctly. Unsplash image loads from cache on repeat visits.
+**Exit criteria:** A user can register, log in, set a daily focus item, and see it persist on page refresh. Auth tokens rotate correctly. Unsplash image loads from cache on repeat visits. Email verification blocks access to protected routes until verified.
 
 ---
 
@@ -127,6 +132,23 @@ Card           → id, listId, title, description, position, updatedAt
 - [x] Playwright E2E: create board → add card → drag card → verify persistence
 
 **Exit criteria:** Two browser tabs open on the same board show card moves in real-time. Drag-and-drop order persists on hard refresh.
+
+---
+
+### Phase 2+: Pomodoro, Habits & Profile
+
+- [x] Pomodoro timer: client-side Zustand store with `persist` middleware (localStorage), work/break phases, configurable durations
+- [x] Ambient sound engine with mute toggle and browser notifications on phase transitions
+- [x] Habit CRUD: DAILY or CUSTOM frequency (specific weekdays), active/inactive toggle, positional ordering
+- [x] Auto-generation of FocusItems from active habits via `ensureHabitsGenerated()`
+- [x] Streak computation from consecutive completed habit-linked FocusItems, displayed as badges
+- [x] Two-section focus layout: Habits section (auto-generated) and Tasks section (manual)
+- [x] User profile page: display name update, password change (requires current password), account deletion with cascade
+- [x] Profile stats display
+- [x] shadcn/ui component library integration (Radix primitives + Tailwind)
+- [x] Radial target icon navigation menu with modal-based feature views
+
+**Exit criteria:** Habits auto-generate daily focus items. Streaks display correctly. Profile changes persist. Pomodoro tracks sessions without backend dependency.
 
 ---
 
@@ -182,11 +204,13 @@ Card           → id, listId, title, description, position, updatedAt
 
 ## Open Decisions (ADR Candidates)
 
-| Decision              | Options                                                       | Status             |
-| --------------------- | ------------------------------------------------------------- | ------------------ |
-| Card position storage | Fractional indexing vs. integer rank + rebalance              | Resolved (ADR 002) |
-| Next.js auth strategy | next-auth v5 vs. custom JWT cookie                            | Resolved (ADR 001) |
-| WebSocket auth        | Token in handshake query vs. cookie                           | Resolved (ADR 003) |
-| Analytics storage     | PostgreSQL aggregates vs. dedicated time-series (TimescaleDB) | Defer to Phase 3   |
+| Decision                            | Options                                                       | Status             |
+| ----------------------------------- | ------------------------------------------------------------- | ------------------ |
+| Card position storage               | Fractional indexing vs. integer rank + rebalance              | Resolved (ADR 002) |
+| Next.js auth strategy               | next-auth v5 vs. custom JWT cookie                            | Resolved (ADR 001) |
+| WebSocket auth                      | Token in handshake query vs. cookie                           | Resolved (ADR 003) |
+| Pomodoro state management           | Client-side only (Zustand + localStorage) vs. backend-synced  | Resolved (ADR 005) |
+| Email verification & password reset | Resend API + SHA-256 tokens in Redis vs. DB-stored tokens     | Resolved (ADR 006) |
+| Analytics storage                   | PostgreSQL aggregates vs. dedicated time-series (TimescaleDB) | Defer to Phase 3   |
 
 > Each decision should be resolved before the phase that depends on it begins, and documented as an ADR in `docs/decisions/`.
