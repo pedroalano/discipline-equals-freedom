@@ -6,7 +6,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        cormorant: ['var(--font-cormorant)', 'Georgia', 'serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

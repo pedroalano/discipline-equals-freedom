@@ -199,7 +199,7 @@ export function FocusPanel() {
     >
       <label
         htmlFor="focus-input"
-        className="block text-center text-2xl font-cormorant font-bold tracking-wide text-white"
+        className="block text-center text-2xl font-display font-bold tracking-wide text-white"
       >
         What&apos;s your focus today?
       </label>
