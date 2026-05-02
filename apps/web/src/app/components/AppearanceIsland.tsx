@@ -2,6 +2,7 @@
 
 import { useTheme } from 'next-themes';
 import { Palette, Sun, Moon, Monitor, Check } from 'lucide-react';
+import { usePomodoroStore } from '../../store/pomodoro';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,9 @@ export function AppearanceIsland() {
   const { setTheme } = useTheme();
   const font = useFontStore((s) => s.font);
   const setFont = useFontStore((s) => s.setFont);
+  const status = usePomodoroStore((s) => s.status);
+
+  if (status !== 'idle') return null;
 
   return (
     <div className="fixed bottom-6 left-6 z-30">
