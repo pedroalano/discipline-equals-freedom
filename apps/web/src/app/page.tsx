@@ -5,6 +5,7 @@ import { ClockGreeting } from './components/ClockGreeting';
 import { FocusPanel } from './components/FocusPanel';
 import { ImageFader } from './components/ImageFader';
 import { PomodoroIsland } from './components/PomodoroIsland';
+import { AppearanceIsland } from './components/AppearanceIsland';
 import { FeatureOverlay } from '@/components/FeatureOverlay';
 import { NavLinks } from './components/NavLinks';
 import { PhotoAttribution } from './components/PhotoAttribution';
@@ -56,6 +57,7 @@ export default async function DashboardPage() {
       <NavLinks />
 
       <PomodoroIsland />
+      <AppearanceIsland />
       <FeatureOverlay />
 
       {photo && <PhotoAttribution author={photo.author} authorUrl={photo.authorUrl} />}
