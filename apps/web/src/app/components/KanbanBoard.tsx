@@ -34,7 +34,7 @@ function positionBetween(a: number, b: number): number {
 
 export function KanbanBoard({ initialData }: Props) {
   const [lists, setLists] = useState<ListResponse[]>(
-    [...initialData.lists].sort((a, b) => a.position - b.position),
+    [...(initialData.lists ?? [])].sort((a, b) => a.position - b.position),
   );
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');

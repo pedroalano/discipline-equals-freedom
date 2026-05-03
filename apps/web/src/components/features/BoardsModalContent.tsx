@@ -18,13 +18,20 @@ export function BoardsModalContent() {
 
   const boardsQuery = useQuery<BoardSummaryResponse[]>({
     queryKey: ['boards', 'modal'],
-    queryFn: () => fetch('/api/boards').then((r) => r.json() as Promise<BoardSummaryResponse[]>),
+    queryFn: async () => {
+      const r = await fetch('/api/boards');
+      if (!r.ok) throw new Error(`Failed to load boards (${r.status})`);
+      return (await r.json()) as BoardSummaryResponse[];
+    },
   });
 
   const boardDetailQuery = useQuery<BoardDetailResponse>({
     queryKey: ['board', 'modal', activeBoardId],
-    queryFn: () =>
-      fetch(`/api/boards/${activeBoardId}`).then((r) => r.json() as Promise<BoardDetailResponse>),
+    queryFn: async () => {
+      const r = await fetch(`/api/boards/${activeBoardId}`);
+      if (!r.ok) throw new Error(`Failed to load board (${r.status})`);
+      return (await r.json()) as BoardDetailResponse;
+    },
     enabled: activeBoardId !== null,
   });
 
