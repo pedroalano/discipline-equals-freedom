@@ -5,7 +5,13 @@ import { Droppable, type DraggableProvided } from '@hello-pangea/dnd';
 import { AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { KanbanCard } from './KanbanCard';
-import type { CardResponse, ListResponse } from '@zenfocus/types';
+import { CardEditorDialog } from './CardEditorDialog';
+import type {
+  CardResponse,
+  CreateCardRequest,
+  ListResponse,
+  UpdateCardRequest,
+} from '@zenfocus/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +19,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface Props {
   list: ListResponse;
-  onCardUpdate: (cardId: string, data: { title?: string; description?: string }) => Promise<void>;
+  onCardUpdate: (cardId: string, data: UpdateCardRequest) => Promise<void>;
   onCardDelete: (cardId: string) => Promise<void>;
-  onCardCreate: (listId: string, title: string) => Promise<void>;
+  onCardCreate: (payload: CreateCardRequest) => Promise<void>;
   onListDelete: (listId: string) => Promise<void>;
   onListUpdate: (listId: string, data: { title: string }) => Promise<void>;
   onMoveToToday: (cardId: string) => Promise<void>;
@@ -32,9 +38,7 @@ export function KanbanList({
   onMoveToToday,
   dragProvided,
 }: Props) {
-  const [addingCard, setAddingCard] = useState(false);
-  const [newCardTitle, setNewCardTitle] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [creatorOpen, setCreatorOpen] = useState(false);
   const [isDeletingList, setIsDeletingList] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(list.title);
@@ -43,16 +47,6 @@ export function KanbanList({
   const sortedCards = [...list.cards].sort(
     (a: CardResponse, b: CardResponse) => a.position - b.position,
   );
-
-  async function handleAddCard() {
-    const trimmed = newCardTitle.trim();
-    if (!trimmed) return;
-    setIsCreating(true);
-    await onCardCreate(list.id, trimmed);
-    setIsCreating(false);
-    setNewCardTitle('');
-    setAddingCard(false);
-  }
 
   async function handleDeleteList() {
     if (!confirm('Delete this list and all its cards?')) return;
@@ -161,48 +155,22 @@ export function KanbanList({
           )}
         </Droppable>
 
-        {addingCard ? (
-          <div className="flex flex-col gap-1">
-            <Input
-              autoFocus
-              disabled={isCreating}
-              value={newCardTitle}
-              onChange={(e) => setNewCardTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleAddCard();
-                if (e.key === 'Escape') {
-                  setNewCardTitle('');
-                  setAddingCard(false);
-                }
-              }}
-              placeholder="Card title..."
-            />
-            <div className="flex gap-1">
-              <Button size="sm" onClick={() => void handleAddCard()} disabled={isCreating}>
-                {isCreating ? 'Adding…' : 'Add'}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setNewCardTitle('');
-                  setAddingCard(false);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setAddingCard(true)}
-            className="justify-start text-muted-foreground hover:text-foreground w-full"
-          >
-            + Add card
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCreatorOpen(true)}
+          className="justify-start text-muted-foreground hover:text-foreground w-full"
+        >
+          + Add card
+        </Button>
+
+        <CardEditorDialog
+          mode="create"
+          listId={list.id}
+          open={creatorOpen}
+          onOpenChange={setCreatorOpen}
+          onSubmit={onCardCreate}
+        />
       </div>
     </TooltipProvider>
   );

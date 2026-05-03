@@ -36,7 +36,18 @@ export class CardService {
     const position = last ? positionAfter(last.position) : positionFirst();
 
     const card = await this.prisma.card.create({
-      data: { listId: dto.listId, title: dto.title, position },
+      data: {
+        listId: dto.listId,
+        title: dto.title,
+        position,
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.priority !== undefined && { priority: dto.priority }),
+        ...(dto.dueDate !== undefined && {
+          dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+        }),
+        ...(dto.labels !== undefined && { labels: dto.labels }),
+        ...(dto.color !== undefined && { color: dto.color }),
+      },
     });
     const response = this.format(card);
     this.gateway.emitCardCreated(list.board.id, response);
@@ -57,6 +68,12 @@ export class CardService {
         ...(dto.title !== undefined && { title: dto.title }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.isToday !== undefined && { isToday: dto.isToday }),
+        ...(dto.priority !== undefined && { priority: dto.priority }),
+        ...(dto.dueDate !== undefined && {
+          dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+        }),
+        ...(dto.labels !== undefined && { labels: dto.labels }),
+        ...(dto.color !== undefined && { color: dto.color }),
       },
     });
     const response = this.format(updated);
@@ -141,6 +158,10 @@ export class CardService {
       position: card.position,
       isToday: card.isToday,
       focusItemId: card.focusItemId,
+      priority: card.priority,
+      dueDate: card.dueDate ? card.dueDate.toISOString() : null,
+      labels: card.labels,
+      color: card.color,
       createdAt: card.createdAt.toISOString(),
       updatedAt: card.updatedAt.toISOString(),
     };

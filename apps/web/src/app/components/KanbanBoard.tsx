@@ -12,8 +12,10 @@ import type {
   CardMovedEvent,
   CardResponse,
   CardUpdatedEvent,
+  CreateCardRequest,
   ListResponse,
   MoveToTodayResponse,
+  UpdateCardRequest,
 } from '@zenfocus/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -198,7 +200,7 @@ export function KanbanBoard({ initialData }: Props) {
     }
   }
 
-  async function handleCardUpdate(cardId: string, data: { title?: string; description?: string }) {
+  async function handleCardUpdate(cardId: string, data: UpdateCardRequest) {
     const res = await fetch(`/api/cards/${cardId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -217,11 +219,11 @@ export function KanbanBoard({ initialData }: Props) {
     void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
   }
 
-  async function handleCardCreate(listId: string, title: string) {
+  async function handleCardCreate(payload: CreateCardRequest) {
     const res = await fetch('/api/cards', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ listId, title }),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       const card = (await res.json()) as CardResponse;
