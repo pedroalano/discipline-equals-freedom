@@ -26,11 +26,10 @@ const PRIORITY_STYLES: Record<CardPriority, string> = {
 };
 
 function formatDueDate(iso: string): { text: string; overdue: boolean } {
-  const due = new Date(iso);
+  const parts = iso.slice(0, 10).split('-').map(Number);
+  const dueStart = new Date(parts[0] ?? 1970, (parts[1] ?? 1) - 1, parts[2] ?? 1);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const dueStart = new Date(due);
-  dueStart.setHours(0, 0, 0, 0);
   const diffDays = Math.round((dueStart.getTime() - today.getTime()) / 86_400_000);
   let text: string;
   if (diffDays === 0) text = 'Today';
@@ -38,7 +37,7 @@ function formatDueDate(iso: string): { text: string; overdue: boolean } {
   else if (diffDays === -1) text = 'Yesterday';
   else if (diffDays > 1 && diffDays < 7) text = `In ${diffDays}d`;
   else
-    text = due.toLocaleDateString(undefined, {
+    text = dueStart.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
     });
