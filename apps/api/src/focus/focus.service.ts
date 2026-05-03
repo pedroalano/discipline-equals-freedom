@@ -149,6 +149,10 @@ export class FocusService {
       position: card.position,
       isToday: card.isToday,
       focusItemId: card.focusItemId,
+      priority: card.priority,
+      dueDate: card.dueDate ? card.dueDate.toISOString() : null,
+      labels: card.labels,
+      color: card.color,
       createdAt: card.createdAt.toISOString(),
       updatedAt: card.updatedAt.toISOString(),
     };

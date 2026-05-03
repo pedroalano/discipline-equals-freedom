@@ -184,14 +184,25 @@ export interface ListResponse {
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 
+export type CardPriority = 'LOW' | 'MEDIUM' | 'HIGH';
+
 export interface CreateCardRequest {
   title: string;
   listId: string;
+  description?: string | null;
+  priority?: CardPriority | null;
+  dueDate?: string | null;
+  labels?: string[];
+  color?: string | null;
 }
 export interface UpdateCardRequest {
   title?: string;
-  description?: string;
+  description?: string | null;
   isToday?: boolean;
+  priority?: CardPriority | null;
+  dueDate?: string | null;
+  labels?: string[];
+  color?: string | null;
 }
 export interface MoveCardRequest {
   listId: string;
@@ -205,6 +216,10 @@ export interface CardResponse {
   position: number;
   isToday: boolean;
   focusItemId: string | null;
+  priority: CardPriority | null;
+  dueDate: string | null;
+  labels: string[];
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }

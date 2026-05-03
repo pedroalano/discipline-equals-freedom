@@ -3,21 +3,46 @@
 import { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Target, X } from 'lucide-react';
-import type { CardResponse } from '@zenfocus/types';
+import { Calendar, Target, X } from 'lucide-react';
+import type { CardPriority, CardResponse, UpdateCardRequest } from '@zenfocus/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CardEditorDialog } from './CardEditorDialog';
 
 interface Props {
   card: CardResponse;
   index: number;
-  onUpdate: (cardId: string, data: { title?: string; description?: string }) => Promise<void>;
+  onUpdate: (cardId: string, data: UpdateCardRequest) => Promise<void>;
   onDelete: (cardId: string) => Promise<void>;
   onMoveToToday: (cardId: string) => Promise<void>;
   shouldReduceMotion: boolean;
+}
+
+const PRIORITY_STYLES: Record<CardPriority, string> = {
+  LOW: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+  MEDIUM: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+  HIGH: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+};
+
+function formatDueDate(iso: string): { text: string; overdue: boolean } {
+  const due = new Date(iso);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueStart = new Date(due);
+  dueStart.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((dueStart.getTime() - today.getTime()) / 86_400_000);
+  let text: string;
+  if (diffDays === 0) text = 'Today';
+  else if (diffDays === 1) text = 'Tomorrow';
+  else if (diffDays === -1) text = 'Yesterday';
+  else if (diffDays > 1 && diffDays < 7) text = `In ${diffDays}d`;
+  else
+    text = due.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+  return { text, overdue: diffDays < 0 };
 }
 
 export function KanbanCard({
@@ -28,36 +53,15 @@ export function KanbanCard({
   onMoveToToday,
   shouldReduceMotion,
 }: Props) {
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(card.title);
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [desc, setDesc] = useState(card.description ?? '');
   const [isDeleting, setIsDeleting] = useState(false);
-
-  async function handleTitleSubmit() {
-    const trimmed = title.trim();
-    if (!trimmed || trimmed === card.title) {
-      setTitle(card.title);
-      setEditing(false);
-      return;
-    }
-    await onUpdate(card.id, { title: trimmed });
-    setEditing(false);
-  }
-
-  async function handleDescSubmit() {
-    const trimmed = desc.trim();
-    if (trimmed === (card.description ?? '')) {
-      setEditingDesc(false);
-      return;
-    }
-    await onUpdate(card.id, { description: trimmed || (null as unknown as string) });
-    setEditingDesc(false);
-  }
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const ringClass = card.isToday
     ? 'ring-today-ring hover:ring-today-ring-hover'
     : 'ring-border hover:ring-primary/40';
+
+  const due = card.dueDate ? formatDueDate(card.dueDate) : null;
+  const hasMeta = !!(card.priority || due || card.labels.length > 0);
 
   return (
     <TooltipProvider>
@@ -69,11 +73,14 @@ export function KanbanCard({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className={`group relative flex flex-col p-3 rounded-md shadow-sm transition-all ring-1 ring-inset ${
-                editing || editingDesc ? 'bg-accent' : 'bg-card'
-              } ${isDeleting ? 'opacity-50' : ''} ${
-                snapshot.isDragging ? 'opacity-90 shadow-lg rotate-1 ring-border' : ringClass
-              }`}
+              className={`group relative flex flex-col p-3 rounded-md shadow-sm transition-all ring-1 ring-inset bg-card ${
+                isDeleting ? 'opacity-50' : ''
+              } ${snapshot.isDragging ? 'opacity-90 shadow-lg rotate-1 ring-border' : ringClass}`}
+              style={
+                card.color
+                  ? { borderLeft: `4px solid ${card.color}`, paddingLeft: '0.5rem' }
+                  : undefined
+              }
             >
               {card.isToday && (
                 <Badge
@@ -87,29 +94,13 @@ export function KanbanCard({
                 <span className="opacity-20 group-hover:opacity-60 text-muted-foreground text-xs select-none shrink-0 mt-0.5 cursor-grab">
                   ⠿
                 </span>
-                {editing ? (
-                  <Input
-                    autoFocus
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => void handleTitleSubmit()}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') void handleTitleSubmit();
-                      if (e.key === 'Escape') {
-                        setTitle(card.title);
-                        setEditing(false);
-                      }
-                    }}
-                    className="flex-1 min-w-0 text-sm h-auto py-0 border-0 border-b rounded-none focus-visible:ring-0 bg-transparent"
-                  />
-                ) : (
-                  <span
-                    className="flex-1 text-sm cursor-pointer text-foreground"
-                    onClick={() => setEditing(true)}
-                  >
-                    {card.title}
-                  </span>
-                )}
+                <button
+                  type="button"
+                  className="flex-1 text-left text-sm text-foreground hover:text-primary"
+                  onClick={() => setEditorOpen(true)}
+                >
+                  {card.title}
+                </button>
                 <div className="flex items-center gap-1 shrink-0">
                   {!card.isToday && (
                     <Tooltip>
@@ -118,7 +109,10 @@ export function KanbanCard({
                           variant="ghost"
                           size="icon"
                           className="opacity-0 group-hover:opacity-100 h-5 w-5 text-today-ring hover:text-today-ring-hover transition-opacity"
-                          onClick={() => void onMoveToToday(card.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void onMoveToToday(card.id);
+                          }}
                           aria-label="Move to today"
                         >
                           <Target className="h-3 w-3" />
@@ -133,7 +127,8 @@ export function KanbanCard({
                         variant="ghost"
                         size="icon"
                         className="opacity-0 group-hover:opacity-100 h-5 w-5 text-muted-foreground hover:text-destructive transition-opacity"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setIsDeleting(true);
                           void onDelete(card.id);
                         }}
@@ -148,34 +143,55 @@ export function KanbanCard({
                 </div>
               </div>
 
-              {editingDesc ? (
-                <Textarea
-                  autoFocus
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  onBlur={() => void handleDescSubmit()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setDesc(card.description ?? '');
-                      setEditingDesc(false);
-                    }
-                  }}
-                  rows={3}
-                  className="mt-2 ml-5 text-xs resize-none"
-                />
-              ) : (
-                <div
-                  className="mt-1 ml-5 text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                  onClick={() => setEditingDesc(true)}
-                >
-                  {card.description ? (
-                    <span className="text-foreground/70">{card.description}</span>
-                  ) : (
-                    <span className="italic">Add description…</span>
+              {card.description && (
+                <p className="mt-1 ml-5 text-xs text-foreground/70 line-clamp-2">
+                  {card.description}
+                </p>
+              )}
+
+              {hasMeta && (
+                <div className="mt-2 ml-5 flex flex-wrap items-center gap-1">
+                  {card.priority && (
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] leading-tight px-1.5 py-0 ${PRIORITY_STYLES[card.priority]}`}
+                    >
+                      {card.priority.toLowerCase()}
+                    </Badge>
                   )}
+                  {due && (
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] leading-tight px-1.5 py-0 gap-1 ${
+                        due.overdue
+                          ? 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      <Calendar className="h-2.5 w-2.5" />
+                      {due.text}
+                    </Badge>
+                  )}
+                  {card.labels.map((label) => (
+                    <Badge
+                      key={label}
+                      variant="secondary"
+                      className="text-[10px] leading-tight px-1.5 py-0"
+                    >
+                      {label}
+                    </Badge>
+                  ))}
                 </div>
               )}
             </motion.div>
+
+            <CardEditorDialog
+              mode="edit"
+              card={card}
+              open={editorOpen}
+              onOpenChange={setEditorOpen}
+              onSubmit={(payload) => onUpdate(card.id, payload)}
+            />
           </div>
         )}
       </Draggable>
