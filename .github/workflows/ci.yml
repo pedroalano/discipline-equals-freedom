@@ -61,6 +61,8 @@ jobs:
 
       - run: pnpm --filter @zenfocus/types build
 
+      - run: pnpm --filter api exec prisma generate
+
       - run: pnpm --filter api exec prisma migrate deploy
 
       - run: pnpm turbo run lint typecheck test
