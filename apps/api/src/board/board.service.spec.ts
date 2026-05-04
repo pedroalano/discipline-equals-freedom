@@ -15,13 +15,16 @@ const mockPrisma = {
 
 const now = new Date('2026-01-01T00:00:00Z');
 
-function makeBoard(overrides = {}) {
+function makeBoard(overrides: Record<string, unknown> = {}) {
   return {
     id: 'board-1',
     userId: 'user-1',
     title: 'Test Board',
+    description: null,
+    color: null,
     createdAt: now,
     updatedAt: now,
+    _count: { lists: 0 },
     ...overrides,
   };
 }
@@ -46,7 +49,8 @@ describe('BoardService', () => {
       expect(result[0]?.id).toBe('board-1');
       expect(mockPrisma.board.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { updatedAt: 'desc' },
+        include: { _count: { select: { lists: true } } },
       });
     });
   });
@@ -82,6 +86,7 @@ describe('BoardService', () => {
       expect(result.title).toBe('Test Board');
       expect(mockPrisma.board.create).toHaveBeenCalledWith({
         data: { userId: 'user-1', title: 'Test Board' },
+        include: { _count: { select: { lists: true } } },
       });
     });
   });
