@@ -86,12 +86,12 @@ describe('_completeSession — cycle counting', () => {
     expect(sessionsDoneThisSet).toBe(0);
   });
 
-  it('transitions shortBreak → work and resets sessionsDoneThisSet', () => {
+  it('transitions shortBreak → work and preserves sessionsDoneThisSet', () => {
     resetStore({ phase: 'shortBreak', sessionsDoneThisSet: 2 });
     usePomodoroStore.getState()._completeSession(true);
     const { phase, sessionsDoneThisSet } = usePomodoroStore.getState();
     expect(phase).toBe('work');
-    expect(sessionsDoneThisSet).toBe(0);
+    expect(sessionsDoneThisSet).toBe(2);
   });
 
   it('does NOT increment dailyCount when completing a break phase', () => {
