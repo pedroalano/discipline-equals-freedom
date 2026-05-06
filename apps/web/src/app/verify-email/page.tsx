@@ -1,10 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailPageInner />
+    </Suspense>
+  );
+}
+
+function VerifyEmailPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
