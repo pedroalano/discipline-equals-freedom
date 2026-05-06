@@ -69,15 +69,22 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      target: builder
+    command: sh -c "pnpm --filter @zenfocus/types build && pnpm --filter web dev"
     ports:
       - '3000:3000'
     volumes:
       - .:/app
       - /app/node_modules
       - /app/apps/web/node_modules
+      - /app/packages/types/node_modules
+      - /app/packages/config/node_modules
       # Prevent the bind-mount from clobbering Next.js build cache
       - /app/apps/web/.next
     environment:
+      NODE_ENV: development
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
       API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3001}
       WATCHPACK_POLLING: 'true'
