@@ -1,4 +1,4 @@
-export function verificationEmailHtml(name: string | null, url: string): string {
+export function magicLinkEmailHtml(name: string | null, url: string): string {
   const greeting = name ? `Hi ${name},` : 'Hi,';
 
   return `<!DOCTYPE html>
@@ -9,18 +9,18 @@ export function verificationEmailHtml(name: string | null, url: string): string 
     <tr><td align="center">
       <table width="100%" style="max-width:480px;background:#ffffff;border-radius:8px;padding:40px">
         <tr><td>
-          <h1 style="margin:0 0 24px;font-size:24px;color:#18181b">Verify your email</h1>
+          <h1 style="margin:0 0 24px;font-size:24px;color:#18181b">Sign in to ZenFocus</h1>
           <p style="margin:0 0 24px;font-size:16px;color:#3f3f46;line-height:1.5">${greeting}</p>
           <p style="margin:0 0 32px;font-size:16px;color:#3f3f46;line-height:1.5">
-            Click the button below to verify your email address. This link expires in 24 hours.
+            Click the button below to sign in. This link expires in 15 minutes and can only be used once.
           </p>
           <table cellpadding="0" cellspacing="0" style="margin:0 0 32px">
             <tr><td style="background:#18181b;border-radius:6px;padding:12px 32px">
-              <a href="${url}" style="color:#ffffff;text-decoration:none;font-size:16px;font-weight:600">Verify Email</a>
+              <a href="${url}" style="color:#ffffff;text-decoration:none;font-size:16px;font-weight:600">Sign in</a>
             </td></tr>
           </table>
           <p style="margin:0;font-size:14px;color:#71717a;line-height:1.5">
-            If you didn't create an account, you can safely ignore this email.
+            If you didn't request this email, you can safely ignore it.
           </p>
         </td></tr>
       </table>

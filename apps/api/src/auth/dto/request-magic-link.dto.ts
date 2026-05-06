@@ -1,6 +1,6 @@
 import { IsEmail } from 'class-validator';
 
-export class ForgotPasswordDto {
+export class RequestMagicLinkDto {
   @IsEmail()
   email!: string;
 }

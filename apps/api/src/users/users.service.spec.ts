@@ -1,6 +1,4 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import * as bcrypt from 'bcryptjs';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
@@ -9,6 +7,7 @@ const mockPrisma = {
   user: {
     findUnique: jest.fn(),
     findUniqueOrThrow: jest.fn(),
+    create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   },
@@ -25,8 +24,9 @@ function makeUser(overrides = {}) {
   return {
     id: 'user-1',
     email: 'user@example.com',
-    passwordHash: '$2a$12$hashedpassword',
     name: 'Test User',
+    emailVerified: false,
+    emailVerifiedAt: null,
     createdAt: now,
     updatedAt: now,
     lastCarryOverDate: null,
@@ -48,6 +48,28 @@ describe('UsersService', () => {
 
     service = module.get(UsersService);
     jest.clearAllMocks();
+  });
+
+  describe('create', () => {
+    it('creates user without password hash', async () => {
+      mockPrisma.user.create.mockResolvedValue(makeUser());
+
+      await service.create('user@example.com', 'Test User');
+
+      expect(mockPrisma.user.create).toHaveBeenCalledWith({
+        data: { email: 'user@example.com', name: 'Test User' },
+      });
+    });
+
+    it('creates user with no name when omitted', async () => {
+      mockPrisma.user.create.mockResolvedValue(makeUser({ name: null }));
+
+      await service.create('user@example.com');
+
+      expect(mockPrisma.user.create).toHaveBeenCalledWith({
+        data: { email: 'user@example.com', name: undefined },
+      });
+    });
   });
 
   describe('getProfile', () => {
@@ -95,43 +117,16 @@ describe('UsersService', () => {
     });
   });
 
-  describe('updatePassword', () => {
-    it('updates password and purges redis tokens', async () => {
-      const hashedPassword = await bcrypt.hash('oldpassword', 12);
-      mockPrisma.user.findUnique.mockResolvedValue(makeUser({ passwordHash: hashedPassword }));
-      mockPrisma.user.update.mockResolvedValue(makeUser());
-      mockRedis.scan.mockResolvedValue(['0', []]);
+  describe('markEmailVerified', () => {
+    it('flips emailVerified flag and sets timestamp', async () => {
+      mockPrisma.user.update.mockResolvedValue(makeUser({ emailVerified: true }));
 
-      await service.updatePassword('user-1', {
-        currentPassword: 'oldpassword',
-        newPassword: 'newpassword123',
+      await service.markEmailVerified('user-1');
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: expect.objectContaining({ emailVerified: true }),
       });
-
-      expect(mockPrisma.user.update).toHaveBeenCalled();
-      expect(mockRedis.scan).toHaveBeenCalled();
-    });
-
-    it('throws UnauthorizedException for wrong current password', async () => {
-      const hashedPassword = await bcrypt.hash('correctpassword', 12);
-      mockPrisma.user.findUnique.mockResolvedValue(makeUser({ passwordHash: hashedPassword }));
-
-      await expect(
-        service.updatePassword('user-1', {
-          currentPassword: 'wrongpassword',
-          newPassword: 'newpassword123',
-        }),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('throws NotFoundException when user not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.updatePassword('missing', {
-          currentPassword: 'password',
-          newPassword: 'newpassword123',
-        }),
-      ).rejects.toThrow(NotFoundException);
     });
   });
 

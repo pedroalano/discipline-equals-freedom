@@ -1,17 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { decodeJwt } from 'jose';
 
-const UNVERIFIED_ALLOWED = new Set([
-  '/verify-email',
-  '/api/auth/verify-email',
-  '/api/auth/resend-verification',
-  '/api/auth/logout',
-  '/api/auth/refresh',
-  '/api/users/me',
-]);
-
 export async function middleware(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = request.nextUrl;
   const token = request.cookies.get('access_token')?.value;
 
   if (!token) {
@@ -42,25 +32,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         }
       }
 
-      // Re-decode the refreshed token to check emailVerified
-      const setCookies = refreshRes.headers.getSetCookie();
-      const newAccessCookie = setCookies.find((c) => c.startsWith('access_token='));
-      if (newAccessCookie) {
-        const newToken = newAccessCookie.split('=')[1]?.split(';')[0];
-        if (newToken) {
-          const newClaims = decodeJwt(newToken);
-          if (!newClaims['emailVerified'] && !UNVERIFIED_ALLOWED.has(pathname)) {
-            return NextResponse.redirect(new URL('/verify-email', request.url));
-          }
-        }
-      }
-
       return response;
-    }
-
-    // Token valid — check email verification
-    if (!claims['emailVerified'] && !UNVERIFIED_ALLOWED.has(pathname)) {
-      return NextResponse.redirect(new URL('/verify-email', request.url));
     }
 
     return NextResponse.next();
@@ -70,7 +42,5 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  matcher: [
-    '/((?!login|register|verify-email|forgot-password|reset-password|_next/static|_next/image|favicon.ico|api).*)',
-  ],
+  matcher: ['/((?!login|auth/magic|_next/static|_next/image|favicon.ico|api).*)'],
 };

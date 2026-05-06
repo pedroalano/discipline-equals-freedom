@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
-import { verificationEmailHtml } from './templates/verification';
-import { passwordResetEmailHtml } from './templates/password-reset';
+import { magicLinkEmailHtml } from './templates/magic-link';
 
 @Injectable()
 export class EmailService {
@@ -17,37 +16,20 @@ export class EmailService {
     this.appUrl = config.getOrThrow<string>('APP_URL');
   }
 
-  async sendVerificationEmail(to: string, name: string | null, token: string): Promise<void> {
-    const url = `${this.appUrl}/verify-email?token=${token}`;
-    const html = verificationEmailHtml(name, url);
+  async sendMagicLinkEmail(to: string, name: string | null, token: string): Promise<void> {
+    const url = `${this.appUrl}/auth/magic?token=${token}`;
+    const html = magicLinkEmailHtml(name, url);
 
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
-      subject: 'Verify your email — ZenFocus',
+      subject: 'Your sign-in link — ZenFocus',
       html,
     });
 
     if (error) {
-      this.logger.error(`Failed to send verification email to ${to}: ${error.message}`);
-      throw new Error(`Failed to send verification email: ${error.message}`);
-    }
-  }
-
-  async sendPasswordResetEmail(to: string, name: string | null, token: string): Promise<void> {
-    const url = `${this.appUrl}/reset-password?token=${token}`;
-    const html = passwordResetEmailHtml(name, url);
-
-    const { error } = await this.resend.emails.send({
-      from: this.from,
-      to,
-      subject: 'Reset your password — ZenFocus',
-      html,
-    });
-
-    if (error) {
-      this.logger.error(`Failed to send password reset email to ${to}: ${error.message}`);
-      throw new Error(`Failed to send password reset email: ${error.message}`);
+      this.logger.error(`Failed to send magic link email to ${to}: ${error.message}`);
+      throw new Error(`Failed to send magic link email: ${error.message}`);
     }
   }
 }

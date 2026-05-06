@@ -1,12 +1,10 @@
-import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import { Inject, Injectable } from '@nestjs/common';
 import type { Redis } from 'ioredis';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
 import type { User } from '@prisma/client';
 import type { ProfileResponse } from '@zenfocus/types';
 import type { UpdateNameDto } from './dto/update-name.dto';
-import type { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -23,8 +21,8 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async create(email: string, passwordHash: string, name?: string): Promise<User> {
-    return this.prisma.user.create({ data: { email, passwordHash, name } });
+  async create(email: string, name?: string): Promise<User> {
+    return this.prisma.user.create({ data: { email, name } });
   }
 
   async markEmailVerified(userId: string): Promise<void> {
@@ -32,10 +30,6 @@ export class UsersService {
       where: { id: userId },
       data: { emailVerified: true, emailVerifiedAt: new Date() },
     });
-  }
-
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   }
 
   async getProfile(userId: string): Promise<ProfileResponse> {
@@ -65,19 +59,6 @@ export class UsersService {
   async updateName(userId: string, dto: UpdateNameDto): Promise<ProfileResponse> {
     await this.prisma.user.update({ where: { id: userId }, data: { name: dto.name } });
     return this.getProfile(userId);
-  }
-
-  async updatePassword(userId: string, dto: UpdatePasswordDto): Promise<void> {
-    const user = await this.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
-
-    const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
-    if (!valid) throw new UnauthorizedException('Current password is incorrect');
-
-    const passwordHash = await bcrypt.hash(dto.newPassword, 12);
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
-
-    await this.purgeRefreshTokens(userId);
   }
 
   async deleteAccount(userId: string): Promise<void> {

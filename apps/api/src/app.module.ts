@@ -15,7 +15,6 @@ import { CardModule } from './card/card.module';
 import { HabitModule } from './habit/habit.module';
 import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { EmailVerifiedGuard } from './auth/guards/email-verified.guard';
 import { validateEnv } from './config/env.validation';
 
 @Module({
@@ -38,7 +37,6 @@ import { validateEnv } from './config/env.validation';
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: EmailVerifiedGuard },
   ],
 })
 export class AppModule {}
