@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ProfileResponse } from '@zenfocus/types';
 import { UpdateNameForm } from './UpdateNameForm';
-import { UpdatePasswordForm } from './UpdatePasswordForm';
 import { AccountStatsCard } from './AccountStatsCard';
 import { DangerZoneSection } from './DangerZoneSection';
 import { Separator } from '@/components/ui/separator';
@@ -59,14 +58,6 @@ export function ProfileClient({ initialProfile }: Props) {
             queryClient.setQueryData<ProfileResponse>(['profile', 'modal'], updated);
           }}
         />
-      </section>
-
-      <Separator />
-
-      {/* Change password */}
-      <section>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Change Password</h2>
-        <UpdatePasswordForm />
       </section>
 
       <Separator />

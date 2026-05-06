@@ -2,17 +2,6 @@ import { z } from 'zod';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-export interface RegisterRequest {
-  name?: string;
-  email: string;
-  password: string;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
 export interface UserResponse {
   id: string;
   email: string;
@@ -27,34 +16,18 @@ export interface AuthResponse {
   user: UserResponse;
 }
 
-// ── Email Verification ───────────────────────────────────────────────────────
+// ── Magic Link ───────────────────────────────────────────────────────────────
 
-export interface VerifyEmailRequest {
-  token: string;
-}
-
-export interface ResendVerificationResponse {
-  message: string;
-}
-
-// ── Password Reset ───────────────────────────────────────────────────────────
-
-export interface ForgotPasswordRequest {
+export interface RequestMagicLinkRequest {
   email: string;
 }
 
-export interface ForgotPasswordResponse {
+export interface RequestMagicLinkResponse {
   message: string;
 }
 
-export interface ResetPasswordRequest {
+export interface VerifyMagicLinkRequest {
   token: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-export interface ResetPasswordResponse {
-  message: string;
 }
 
 // ── DailyImage ────────────────────────────────────────────────────────────────
@@ -260,31 +233,7 @@ export interface UpdateNameRequest {
   name: string;
 }
 
-export interface UpdatePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
-
-const strongPassword = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-    'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
-  );
-
-export const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100).optional(),
-  email: z.string().email('Invalid email address'),
-  password: strongPassword,
-});
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
 
 export const createFocusItemSchema = z.object({
   text: z.string().min(1, 'Text is required').max(500, 'Text too long'),
@@ -312,42 +261,16 @@ export const updateNameSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
 });
 
-export const updatePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: strongPassword,
-    confirmPassword: z.string().min(1, 'Please confirm your new password'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-export type RegisterFormData = z.infer<typeof registerSchema>;
-export type LoginFormData = z.infer<typeof loginSchema>;
 export type CreateFocusItemFormData = z.infer<typeof createFocusItemSchema>;
 export type UpdateNameFormData = z.infer<typeof updateNameSchema>;
-export type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
-export const verifyEmailSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-});
-
-export const forgotPasswordSchema = z.object({
+export const requestMagicLinkSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export const resetPasswordSchema = z
-  .object({
-    token: z.string().min(1),
-    newPassword: strongPassword,
-    confirmPassword: z.string().min(1, 'Please confirm your new password'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+export const verifyMagicLinkSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+});
 
-export type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;
-export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+export type RequestMagicLinkFormData = z.infer<typeof requestMagicLinkSchema>;
+export type VerifyMagicLinkFormData = z.infer<typeof verifyMagicLinkSchema>;
