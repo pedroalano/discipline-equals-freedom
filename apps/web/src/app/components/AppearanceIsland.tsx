@@ -15,7 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFontStore, FONT_LABELS, type FontOption } from '@/store/font';
 
-const FONT_OPTIONS: FontOption[] = ['cormorant', 'lora', 'inter', 'spectral'];
+const FONT_OPTIONS: FontOption[] = [
+  'cormorant',
+  'inter',
+  'roboto',
+  'playfair',
+  'montserrat',
+  'fraunces',
+  'dm-serif',
+  'outfit',
+  'bebas',
+];
 
 export function AppearanceIsland() {
   const { setTheme } = useTheme();

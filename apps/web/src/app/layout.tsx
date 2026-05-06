@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var f=JSON.parse(localStorage.getItem('zenfocus-font')||'{}');var m={cormorant:"'Cormorant Garamond', Georgia, serif",lora:"'Lora', Georgia, serif",inter:"'Inter', system-ui, sans-serif",spectral:"'Spectral', Georgia, serif"};if(f.state&&f.state.font&&m[f.state.font]){document.documentElement.style.setProperty('--font-display',m[f.state.font])}}catch(e){}})()`,
+            __html: `(function(){try{var f=JSON.parse(localStorage.getItem('zenfocus-font')||'{}');var m={cormorant:"'Cormorant Garamond', Georgia, serif",inter:"'Inter', system-ui, sans-serif",roboto:"'Roboto', system-ui, sans-serif",playfair:"'Playfair Display', Georgia, serif",montserrat:"'Montserrat', system-ui, sans-serif",fraunces:"'Fraunces', Georgia, serif","dm-serif":"'DM Serif Display', Georgia, serif",outfit:"'Outfit', system-ui, sans-serif",bebas:"'Bebas Neue', Impact, sans-serif"};var k=f.state&&f.state.font;if(k&&m[k]){document.documentElement.style.setProperty('--font-display',m[k])}}catch(e){}})()`,
           }}
         />
         <Providers>{children}</Providers>
