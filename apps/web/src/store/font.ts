@@ -13,15 +13,15 @@ export type FontOption =
   | 'bebas';
 
 export const FONT_MAP: Record<FontOption, string> = {
-  cormorant: "'Cormorant Garamond', Georgia, serif",
-  inter: "'Inter', system-ui, sans-serif",
-  roboto: "'Roboto', system-ui, sans-serif",
-  playfair: "'Playfair Display', Georgia, serif",
-  montserrat: "'Montserrat', system-ui, sans-serif",
-  fraunces: "'Fraunces', Georgia, serif",
-  'dm-serif': "'DM Serif Display', Georgia, serif",
-  outfit: "'Outfit', system-ui, sans-serif",
-  bebas: "'Bebas Neue', Impact, sans-serif",
+  cormorant: 'var(--font-cormorant), Georgia, serif',
+  inter: 'var(--font-inter), system-ui, sans-serif',
+  roboto: 'var(--font-roboto), system-ui, sans-serif',
+  playfair: 'var(--font-playfair), Georgia, serif',
+  montserrat: 'var(--font-montserrat), system-ui, sans-serif',
+  fraunces: 'var(--font-fraunces), Georgia, serif',
+  'dm-serif': 'var(--font-dm-serif), Georgia, serif',
+  outfit: 'var(--font-outfit), system-ui, sans-serif',
+  bebas: 'var(--font-bebas), Impact, sans-serif',
 };
 
 export const FONT_LABELS: Record<FontOption, string> = {
