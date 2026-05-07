@@ -1,7 +1,19 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { requestMagicLinkSchema } from '@zenfocus/types';
+import { AuthShell } from '@/components/AuthShell';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -47,63 +59,74 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="mb-8 text-center text-3xl font-light tracking-widest text-neutral-100">
-          ZenFocus
-        </h1>
+    <AuthShell>
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription>We&apos;ll email you a one-time sign-in link.</CardDescription>
+        </CardHeader>
 
         {sent ? (
-          <div className="space-y-4 text-center">
-            <p className="rounded bg-emerald-900/40 px-4 py-3 text-sm text-emerald-200">
-              Check your inbox. We sent a sign-in link to{' '}
-              <span className="font-medium">{sentEmail}</span>. The link expires in 15 minutes.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSent(false);
-                setSentEmail('');
-              }}
-              className="text-sm text-neutral-400 hover:text-neutral-200"
-            >
-              Use a different email
-            </button>
-          </div>
+          <>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" />
+                <p>
+                  Check your inbox. We sent a sign-in link to{' '}
+                  <span className="font-medium text-foreground">{sentEmail}</span>. The link expires
+                  in 15 minutes.
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSent(false);
+                  setSentEmail('');
+                }}
+              >
+                Use a different email
+              </Button>
+            </CardFooter>
+          </>
         ) : (
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-            {error && (
-              <p className="rounded bg-red-900/40 px-4 py-2 text-sm text-red-300">{error}</p>
-            )}
+          <form onSubmit={(e) => void handleSubmit(e)}>
+            <CardContent className="space-y-4">
+              {error && (
+                <p className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
 
-            <div>
-              <label htmlFor="email" className="mb-1 block text-sm text-neutral-400">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 outline-none focus:border-neutral-500"
-              />
-            </div>
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="text-sm font-medium text-foreground">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded bg-neutral-100 py-2 font-medium text-neutral-900 transition hover:bg-white disabled:opacity-50"
-            >
-              {loading ? 'Sending link…' : 'Send sign-in link'}
-            </button>
-
-            <p className="text-center text-xs text-neutral-500">
-              No password needed. We&apos;ll email you a one-time sign-in link.
-            </p>
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? 'Sending link…' : 'Send sign-in link'}
+              </Button>
+            </CardContent>
+            <CardFooter>
+              <p className="text-xs text-muted-foreground">
+                No password needed. We&apos;ll email you a one-time sign-in link.
+              </p>
+            </CardFooter>
           </form>
         )}
-      </div>
-    </main>
+      </Card>
+    </AuthShell>
   );
 }
