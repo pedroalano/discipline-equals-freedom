@@ -3,6 +3,10 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+import { AuthShell } from '@/components/AuthShell';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 function MagicLinkVerifier() {
   const router = useRouter();
@@ -43,24 +47,33 @@ function MagicLinkVerifier() {
   }, [token, router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4">
-      <div className="w-full max-w-sm text-center">
-        <h1 className="mb-8 text-3xl font-light tracking-widest text-neutral-100">ZenFocus</h1>
-        {error ? (
-          <div className="space-y-4">
-            <p className="rounded bg-red-900/40 px-4 py-3 text-sm text-red-300">{error}</p>
-            <Link
-              href="/login"
-              className="inline-block text-sm text-neutral-300 underline hover:text-white"
-            >
-              Request a new link
-            </Link>
-          </div>
-        ) : (
-          <p className="text-sm text-neutral-400">Signing you in…</p>
-        )}
-      </div>
-    </main>
+    <AuthShell>
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>{error ? 'Sign-in failed' : 'Signing you in'}</CardTitle>
+          <CardDescription>
+            {error ? 'Your link could not be verified.' : 'Verifying your sign-in link…'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error ? (
+            <>
+              <p className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/login">Request a new link</Link>
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Signing you in…</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AuthShell>
   );
 }
 
