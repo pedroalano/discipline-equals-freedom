@@ -13,10 +13,20 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     const isExpired = !claims.exp || claims.exp * 1000 < Date.now();
 
     if (isExpired) {
-      const refreshRes = await fetch(`${request.nextUrl.origin}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { cookie: request.headers.get('cookie') ?? '' },
-      });
+      let refreshRes: Response;
+      try {
+        refreshRes = await fetch(`${request.nextUrl.origin}/api/auth/refresh`, {
+          method: 'POST',
+          headers: { cookie: request.headers.get('cookie') ?? '' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(3000),
+        });
+      } catch {
+        const response = NextResponse.redirect(new URL('/login', request.url));
+        response.cookies.delete('access_token');
+        response.cookies.delete('refresh_token');
+        return response;
+      }
 
       if (!refreshRes.ok) {
         const response = NextResponse.redirect(new URL('/login', request.url));

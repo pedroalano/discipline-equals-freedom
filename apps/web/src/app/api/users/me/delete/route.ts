@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { assertSameOrigin } from '@/lib/assertSameOrigin';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
@@ -8,6 +9,8 @@ function bearerHeaders(req: NextRequest): HeadersInit {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const res = await fetch(`${API_URL}/users/me`, {
     method: 'DELETE',
     headers: bearerHeaders(req),

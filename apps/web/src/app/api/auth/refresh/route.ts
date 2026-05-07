@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { AuthResponse } from '@zenfocus/types';
+import { assertSameOrigin } from '@/lib/assertSameOrigin';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
 const isProduction = process.env['NODE_ENV'] === 'production';
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const refreshToken = req.cookies.get('refresh_token')?.value;
 
   if (!refreshToken) {

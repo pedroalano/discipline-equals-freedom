@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import {
   Bebas_Neue,
   Cormorant_Garamond,
@@ -11,6 +12,7 @@ import {
   Roboto,
 } from 'next/font/google';
 import { Providers } from '@/lib/providers';
+import { DEFAULT_FONT, FONT_COOKIE, FONT_MAP, isFontOption } from '@/lib/fonts';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({
@@ -88,15 +90,20 @@ export const metadata: Metadata = {
   description: 'Your daily focus dashboard',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const fontPref = cookieStore.get(FONT_COOKIE)?.value;
+  const fontKey = isFontOption(fontPref) ? fontPref : DEFAULT_FONT;
+  const fontDisplay = FONT_MAP[fontKey];
+
   return (
-    <html lang="en" suppressHydrationWarning className={fontVariables}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={fontVariables}
+      style={{ '--font-display': fontDisplay } as React.CSSProperties}
+    >
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var f=JSON.parse(localStorage.getItem('zenfocus-font')||'{}');var m={cormorant:"var(--font-cormorant), Georgia, serif",inter:"var(--font-inter), system-ui, sans-serif",roboto:"var(--font-roboto), system-ui, sans-serif",playfair:"var(--font-playfair), Georgia, serif",montserrat:"var(--font-montserrat), system-ui, sans-serif",fraunces:"var(--font-fraunces), Georgia, serif","dm-serif":"var(--font-dm-serif), Georgia, serif",outfit:"var(--font-outfit), system-ui, sans-serif",bebas:"var(--font-bebas), Impact, sans-serif"};var k=f.state&&f.state.font;if(k&&m[k]){document.documentElement.style.setProperty('--font-display',m[k])}}catch(e){}})()`,
-          }}
-        />
         <Providers>{children}</Providers>
       </body>
     </html>

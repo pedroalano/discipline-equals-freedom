@@ -41,10 +41,16 @@ function relativeTime(date: string): string {
 }
 
 const PINNED_KEY = 'zenfocus:pinned-boards';
+const MAX_PINNED = 200;
+const MAX_ID_LEN = 64;
 
 function loadPinned(): string[] {
   try {
-    return JSON.parse(localStorage.getItem(PINNED_KEY) ?? '[]') as string[];
+    const parsed: unknown = JSON.parse(localStorage.getItem(PINNED_KEY) ?? '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((x): x is string => typeof x === 'string' && x.length > 0 && x.length <= MAX_ID_LEN)
+      .slice(0, MAX_PINNED);
   } catch {
     return [];
   }
@@ -128,8 +134,9 @@ export function BoardsClient({ boards, onBoardClick }: BoardsClientProps) {
   function togglePin(id: string) {
     setPinnedIds((prev) => {
       const next = prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id];
-      localStorage.setItem(PINNED_KEY, JSON.stringify(next));
-      return next;
+      const bounded = next.slice(0, MAX_PINNED);
+      localStorage.setItem(PINNED_KEY, JSON.stringify(bounded));
+      return bounded;
     });
   }
 
