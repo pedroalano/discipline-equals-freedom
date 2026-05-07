@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { assertSameOrigin } from '@/lib/assertSameOrigin';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
@@ -8,6 +9,8 @@ function bearerHeaders(req: NextRequest): HeadersInit {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const { id } = await params;
   const body = (await req.json()) as unknown;
   const res = await fetch(`${API_URL}/cards/${id}/move`, {

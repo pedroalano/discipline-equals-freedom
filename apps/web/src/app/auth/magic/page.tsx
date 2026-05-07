@@ -28,6 +28,10 @@ function MagicLinkVerifier() {
 
         if (cancelled) return;
 
+        if (typeof window !== 'undefined') {
+          window.history.replaceState(null, '', '/auth/magic');
+        }
+
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { message?: string };
           setError(data.message ?? 'Sign-in link is invalid or expired');

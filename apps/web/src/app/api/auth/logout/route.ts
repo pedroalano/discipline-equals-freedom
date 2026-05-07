@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { assertSameOrigin } from '@/lib/assertSameOrigin';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 
 export async function POST(req: NextRequest) {
+  const denied = assertSameOrigin(req);
+  if (denied) return denied;
   const accessToken = req.cookies.get('access_token')?.value;
 
   if (accessToken) {

@@ -24,6 +24,16 @@ import { useBoardUIStore } from '../../store/board';
 
 const WS_URL = process.env['NEXT_PUBLIC_WS_URL'] ?? 'http://localhost:3001';
 
+if (
+  process.env['NODE_ENV'] === 'production' &&
+  !WS_URL.startsWith('wss://') &&
+  !WS_URL.startsWith('https://')
+) {
+  throw new Error(
+    'NEXT_PUBLIC_WS_URL must use wss:// or https:// in production — refusing to send credentials over plaintext.',
+  );
+}
+
 interface Props {
   initialData: BoardDetailResponse;
 }
