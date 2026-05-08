@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { AuthShell } from '@/components/AuthShell';
@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 
 function MagicLinkVerifier() {
-  const router = useRouter();
   const params = useSearchParams();
   const token = params.get('token');
   const [error, setError] = useState<string | null>(token ? null : 'Missing sign-in token');
@@ -38,8 +37,7 @@ function MagicLinkVerifier() {
           return;
         }
 
-        router.replace('/');
-        router.refresh();
+        window.location.assign('/');
       } catch {
         if (!cancelled) setError('Network error — please try again');
       }
@@ -48,7 +46,7 @@ function MagicLinkVerifier() {
     return () => {
       cancelled = true;
     };
-  }, [token, router]);
+  }, [token]);
 
   return (
     <AuthShell>
