@@ -108,6 +108,15 @@ export interface HabitStreakResponse {
   completedToday: boolean;
 }
 
+export interface HabitAggregateDay {
+  date: string; // YYYY-MM-DD
+  count: number; // distinct habits completed that day
+}
+
+export interface HabitsAggregateCompletionResponse {
+  days: HabitAggregateDay[]; // oldest -> newest, length = requested window
+}
+
 export interface HabitListResponse {
   habits: HabitResponse[];
 }
