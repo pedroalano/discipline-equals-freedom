@@ -7,6 +7,7 @@ import type {
   HabitListResponse,
   HabitResponse,
   HabitStreakResponse,
+  HabitsAggregateCompletionResponse,
 } from '@zenfocus/types';
 import type { Habit } from '@prisma/client';
 
@@ -99,6 +100,49 @@ export class HabitService {
     const completedToday = completionMap.get(todayStr) ?? false;
 
     return { habitId, currentStreak, longestStreak, completedToday };
+  }
+
+  async getAggregateCompletionHistory(
+    userId: string,
+    days: number,
+  ): Promise<HabitsAggregateCompletionResponse> {
+    const window = Math.min(Math.max(Math.trunc(days) || 365, 1), 365);
+
+    const todayStr = new Date().toISOString().substring(0, 10);
+    const start = new Date(todayStr + 'T00:00:00.000Z');
+    start.setUTCDate(start.getUTCDate() - (window - 1));
+
+    const records = await this.prisma.focusItem.findMany({
+      where: {
+        userId,
+        completed: true,
+        habitId: { not: null },
+        date: { gte: start },
+      },
+      select: { date: true, habitId: true },
+    });
+
+    const perDay = new Map<string, Set<string>>();
+    for (const r of records) {
+      if (!r.habitId) continue;
+      const ds = r.date.toISOString().substring(0, 10);
+      let bucket = perDay.get(ds);
+      if (!bucket) {
+        bucket = new Set<string>();
+        perDay.set(ds, bucket);
+      }
+      bucket.add(r.habitId);
+    }
+
+    const result: HabitsAggregateCompletionResponse['days'] = [];
+    const cursor = new Date(start);
+    for (let i = 0; i < window; i++) {
+      const ds = cursor.toISOString().substring(0, 10);
+      result.push({ date: ds, count: perDay.get(ds)?.size ?? 0 });
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return { days: result };
   }
 
   private parseCustomDays(habit: Habit): Set<number> | null {

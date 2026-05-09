@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import type { HabitFrequency, HabitListResponse, HabitResponse } from '@zenfocus/types';
+import { HabitsAggregateHeatmap } from './HabitsAggregateHeatmap';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -275,6 +276,8 @@ export function HabitsModal({ open, onOpenChange }: Props) {
               )}
             </div>
           </div>
+
+          <HabitsAggregateHeatmap />
 
           {/* Habit list */}
           {habits.length > 0 && (

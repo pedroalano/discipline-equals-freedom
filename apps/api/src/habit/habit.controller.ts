@@ -1,19 +1,27 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { HabitService } from './habit.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
 import { CurrentUser, type RequestUser } from '../auth/decorators/current-user.decorator';
-import type { HabitListResponse, HabitResponse, HabitStreakResponse } from '@zenfocus/types';
+import type {
+  HabitListResponse,
+  HabitResponse,
+  HabitStreakResponse,
+  HabitsAggregateCompletionResponse,
+} from '@zenfocus/types';
 
 @Controller('habits')
 export class HabitController {
@@ -50,5 +58,13 @@ export class HabitController {
     @Param('id') id: string,
   ): Promise<HabitStreakResponse> {
     return this.habit.getStreak(user.id, id);
+  }
+
+  @Get('completion')
+  getAggregateCompletion(
+    @CurrentUser() user: RequestUser,
+    @Query('days', new DefaultValuePipe(365), ParseIntPipe) days: number,
+  ): Promise<HabitsAggregateCompletionResponse> {
+    return this.habit.getAggregateCompletionHistory(user.id, days);
   }
 }

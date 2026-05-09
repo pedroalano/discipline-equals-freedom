@@ -380,4 +380,76 @@ describe('HabitService', () => {
       });
     });
   });
+
+  describe('getAggregateCompletionHistory', () => {
+    function makeAggRecord(dateStr: string, habitId: string) {
+      return { date: new Date(dateStr + 'T00:00:00.000Z'), habitId };
+    }
+
+    it('returns all-zero window when user has no completed records', async () => {
+      mockPrisma.focusItem.findMany.mockResolvedValue([]);
+
+      const result = await service.getAggregateCompletionHistory('user-1', 14);
+
+      expect(result.days).toHaveLength(14);
+      expect(result.days.every((d: { count: number }) => d.count === 0)).toBe(true);
+    });
+
+    it('counts distinct habits completed each day', async () => {
+      mockPrisma.focusItem.findMany.mockResolvedValue([
+        makeAggRecord(TODAY, 'h-1'),
+        makeAggRecord(TODAY, 'h-2'),
+        makeAggRecord(TODAY, 'h-3'),
+        makeAggRecord('2026-04-15', 'h-1'),
+      ]);
+
+      const result = await service.getAggregateCompletionHistory('user-1', 7);
+
+      expect(result.days).toHaveLength(7);
+      expect(result.days[result.days.length - 1]).toEqual({ date: TODAY, count: 3 });
+      expect(result.days[result.days.length - 2]).toEqual({ date: '2026-04-15', count: 1 });
+      expect(result.days[0]).toEqual({ date: '2026-04-10', count: 0 });
+    });
+
+    it('dedupes the same habit on the same day', async () => {
+      mockPrisma.focusItem.findMany.mockResolvedValue([
+        makeAggRecord(TODAY, 'h-1'),
+        makeAggRecord(TODAY, 'h-1'),
+        makeAggRecord(TODAY, 'h-1'),
+      ]);
+
+      const result = await service.getAggregateCompletionHistory('user-1', 1);
+
+      expect(result.days).toEqual([{ date: TODAY, count: 1 }]);
+    });
+
+    it('clamps days to [1, 365]', async () => {
+      mockPrisma.focusItem.findMany.mockResolvedValue([]);
+
+      const tooMany = await service.getAggregateCompletionHistory('user-1', 9999);
+      expect(tooMany.days).toHaveLength(365);
+
+      const tooFew = await service.getAggregateCompletionHistory('user-1', 0);
+      expect(tooFew.days).toHaveLength(365);
+
+      const negative = await service.getAggregateCompletionHistory('user-1', -5);
+      expect(negative.days).toHaveLength(1);
+    });
+
+    it('only queries focus items with completed=true and habitId not null', async () => {
+      mockPrisma.focusItem.findMany.mockResolvedValue([]);
+
+      await service.getAggregateCompletionHistory('user-1', 30);
+
+      expect(mockPrisma.focusItem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: 'user-1',
+            completed: true,
+            habitId: { not: null },
+          }),
+        }),
+      );
+    });
+  });
 });
