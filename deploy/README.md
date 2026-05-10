@@ -1,10 +1,12 @@
 # VPS deployment runbook
 
-Single-host production setup. Nginx + Let's Encrypt on the host fronts Docker
-containers (web, api, postgres, redis) on the loopback interface. Images are
-built by GitHub Actions and pushed to GHCR; the VPS pulls.
+Single-host production setup. The VPS already runs an outer reverse proxy
+(nginx/traefik/caddy) on 80/443 that fronts Docker containers (web, api,
+postgres, redis) bound to the loopback interface on alternate ports
+(`127.0.0.1:8080` web, `127.0.0.1:8081` api). Images are built by GitHub
+Actions and pushed to GHCR; the VPS pulls.
 
-Assumes Ubuntu/Debian. Replace `app.example.com` with your domain everywhere.
+Assumes Ubuntu/Debian. Replace `zen.example.com` with your subdomain everywhere.
 
 ## 0. Prerequisites
 
@@ -17,14 +19,12 @@ Assumes Ubuntu/Debian. Replace `app.example.com` with your domain everywhere.
 
 ```bash
 sudo apt update
-sudo apt install -y nginx certbot python3-certbot-nginx \
-    docker.io docker-compose-plugin git ufw
+sudo apt install -y docker.io docker-compose-plugin git ufw
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER"   # log out / back in for group change
 
-# Firewall
+# Firewall — outer reverse proxy already owns 80/443; only SSH needed here.
 sudo ufw allow OpenSSH
-sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 ```
 
@@ -52,23 +52,22 @@ shred -u .env.tmp
 chmod 600 .env
 ```
 
-## 4. Nginx + TLS
+## 4. Outer reverse proxy
 
-```bash
-sudo cp deploy/nginx/app.conf /etc/nginx/sites-available/zenfocus
-sudo sed -i 's/app\.example\.com/<your-domain>/g' /etc/nginx/sites-available/zenfocus
-sudo ln -s /etc/nginx/sites-available/zenfocus /etc/nginx/sites-enabled/zenfocus
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo mkdir -p /var/www/certbot
+The VPS's existing reverse proxy handles TLS and forwards to the loopback
+ports exposed by the compose stack. Add a virtual host for your subdomain
+(e.g. `zen.example.com`) with these upstreams:
 
-# Comment out the listen 443 block before the first nginx reload — certbot
-# will rewrite the file with cert paths after issuing the certificate.
-sudo nginx -t && sudo systemctl reload nginx
+- `127.0.0.1:8080` — Next.js web
+- `127.0.0.1:8081` — NestJS api (mount under `/api/`, with the `/api` prefix
+  stripped before proxying)
+- `/socket.io/` must forward to the api upstream with WebSocket upgrade
+  headers and a long read timeout (≥ 1h) for Socket.io
 
-sudo certbot --nginx -d <your-domain>
-# certbot installs a renewal timer (systemctl list-timers | grep certbot)
-sudo nginx -t && sudo systemctl reload nginx
-```
+`deploy/nginx/app.conf` is a complete reference template (upstream blocks,
+`/api/`, `/socket.io/`, and the Next.js catch-all). Translate it to your
+proxy of choice, or include it as an extra `server { … }` block in the
+existing nginx config and run certbot for the new subdomain.
 
 ## 5. Pull and start
 
