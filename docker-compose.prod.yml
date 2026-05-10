@@ -6,7 +6,9 @@
 #   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
 #
-# Nginx on the host proxies to 127.0.0.1:3000 (web) and 127.0.0.1:3001 (api).
+# Outer reverse proxy on the host (already running on VPS) proxies to
+# 127.0.0.1:8080 (web) and 127.0.0.1:8081 (api). Container-internal ports
+# stay at 3000/3001 on the zenfocus_network bridge.
 # Postgres and Redis are not exposed to the host — only reachable on the
 # zenfocus_network bridge.
 
@@ -66,7 +68,7 @@ services:
     image: ghcr.io/${GHCR_OWNER}/zenfocus-api:${TAG:-latest}
     restart: unless-stopped
     ports:
-      - '127.0.0.1:3001:3001'
+      - '127.0.0.1:8081:3001'
     environment:
       NODE_ENV: production
       PORT: 3001
@@ -108,7 +110,7 @@ services:
     image: ghcr.io/${GHCR_OWNER}/zenfocus-web:${TAG:-latest}
     restart: unless-stopped
     ports:
-      - '127.0.0.1:3000:3000'
+      - '127.0.0.1:8080:3000'
     environment:
       NODE_ENV: production
       PORT: 3000
