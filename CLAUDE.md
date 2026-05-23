@@ -41,8 +41,11 @@ docker compose exec api pnpm --filter api exec prisma generate                  
 docker compose exec api pnpm --filter api exec prisma studio                     # open Prisma Studio
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
-docker compose exec api pnpm jest path/to/file.spec.ts   # run a single backend test
-docker compose exec api pnpm test                        # run all backend tests
+# The api container WORKDIR is /app (monorepo root); use --filter api to scope to the api package
+# and avoid turbo triggering web:build which is not installed in the api container.
+docker compose exec api pnpm --filter api jest path/to/file.spec.ts   # run a single backend test
+docker compose exec api pnpm --filter api test                        # run all backend unit tests
+docker compose exec api pnpm --filter api test:e2e                    # run all backend integration tests
 
 # ── Rebuild after Dockerfile or dependency changes ────────────────────────────
 docker compose build api

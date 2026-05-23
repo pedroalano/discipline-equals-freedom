@@ -22,7 +22,8 @@ describe('AuthController (e2e)', () => {
   beforeEach(async () => {
     await prisma.user.deleteMany();
     await redis.flushdb();
-    // Clear the in-memory throttle storage so rate limits reset between tests.
+    // The real ThrottlerGuard runs even in tests (APP_GUARD useClass bypasses overrideGuard).
+    // Clear its in-memory Map so rate limits reset between tests.
     app.get<ThrottlerStorageService>(ThrottlerStorage).storage.clear();
   });
 

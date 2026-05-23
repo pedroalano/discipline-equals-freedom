@@ -34,7 +34,7 @@ const mockGateway = {
   emitCardMoved: jest.fn(),
 };
 
-// April 16, 2026 is a Wednesday (UTC day = 3)
+// April 16, 2026 is a Thursday (UTC day = 4)
 const TODAY = '2026-04-16';
 const YESTERDAY = '2026-04-15';
 
@@ -175,9 +175,9 @@ describe('FocusService', () => {
 
     it('only generates CUSTOM habit items when today is a scheduled day', async () => {
       // Thursday-only habit (day 4). Today is Thursday (Apr 16).
-      const wedOnlyHabit = makeHabit({ frequency: 'CUSTOM', customDays: '4' });
+      const thuOnlyHabit = makeHabit({ frequency: 'CUSTOM', customDays: '4' });
 
-      mockPrisma.habit.findMany.mockResolvedValueOnce([wedOnlyHabit]);
+      mockPrisma.habit.findMany.mockResolvedValueOnce([thuOnlyHabit]);
       mockPrisma.focusItem.findMany.mockResolvedValueOnce([]); // no existing habit items
       mockPrisma.focusItem.findFirst.mockResolvedValueOnce(null);
       mockPrisma.focusItem.findMany.mockResolvedValueOnce([makeFocusItem({ habitId: 'habit-1' })]);
