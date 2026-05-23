@@ -5,8 +5,8 @@ import type { BoardSummaryResponse, BoardDetailResponse } from '@zenfocus/types'
 import { ModalShell } from '@/components/ModalShell';
 import { BoardsClient } from '@/app/boards/BoardsClient';
 import { BoardCreateButton } from '@/app/boards/BoardCreateButton';
-import { KanbanBoard } from '@/app/components/KanbanBoard';
-import { BoardSettingsButton } from '@/app/components/BoardSettingsButton';
+import { KanbanBoard } from '@/components/features/KanbanBoard';
+import { BoardSettingsButton } from '@/components/features/BoardSettingsButton';
 import { useFeaturesStore } from '@/store/features';
 
 export function BoardsModalContent() {

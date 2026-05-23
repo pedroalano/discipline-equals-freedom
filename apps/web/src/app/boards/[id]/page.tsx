@@ -2,8 +2,8 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { BoardDetailResponse } from '@zenfocus/types';
 import { PageShell } from '@/components/PageShell';
-import { KanbanBoard } from '../../components/KanbanBoard';
-import { BoardSettingsButton } from '../../components/BoardSettingsButton';
+import { KanbanBoard } from '@/components/features/KanbanBoard';
+import { BoardSettingsButton } from '@/components/features/BoardSettingsButton';
 
 const API_URL = process.env['API_INTERNAL_URL'] ?? 'http://localhost:3001';
 

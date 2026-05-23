@@ -6,8 +6,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import { localDateISO } from '@/lib/date';
 import { usePomodoroStore } from '../../store/pomodoro';
-import { HabitBadge } from '../today/HabitBadge';
-import { HabitsModal } from '../today/HabitsModal';
+import { HabitBadge } from '@/app/today/HabitBadge';
+import { HabitsModal } from '@/app/today/HabitsModal';
 
 async function fetchFocusItems(date: string): Promise<FocusItemListResponse> {
   const res = await fetch(`/api/focus?date=${date}`);
