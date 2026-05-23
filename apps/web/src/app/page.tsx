@@ -1,14 +1,14 @@
 import { cookies } from 'next/headers';
 import { decodeJwt } from 'jose';
 import type { DailyImageResponse } from '@zenfocus/types';
-import { ClockGreeting } from './components/ClockGreeting';
-import { FocusPanel } from './components/FocusPanel';
-import { ImageFader } from './components/ImageFader';
-import { PomodoroIsland } from './components/PomodoroIsland';
-import { AppearanceIsland } from './components/AppearanceIsland';
+import { ClockGreeting } from '@/components/features/ClockGreeting';
+import { FocusPanel } from '@/components/features/FocusPanel';
+import { ImageFader } from '@/components/features/ImageFader';
+import { PomodoroIsland } from '@/components/features/PomodoroIsland';
+import { AppearanceIsland } from '@/components/features/AppearanceIsland';
 import { FeatureOverlay } from '@/components/FeatureOverlay';
-import { NavLinks } from './components/NavLinks';
-import { PhotoAttribution } from './components/PhotoAttribution';
+import { NavLinks } from '@/components/features/NavLinks';
+import { PhotoAttribution } from '@/components/features/PhotoAttribution';
 
 async function getDailyImage(): Promise<DailyImageResponse | null> {
   const apiUrl = process.env['API_INTERNAL_URL'];
