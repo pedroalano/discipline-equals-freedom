@@ -9,7 +9,7 @@ A full-stack productivity dashboard combining a minimalist daily focus surface w
 | Frontend  | Next.js 14 (App Router), Tailwind CSS, Framer Motion, Zustand, React Query |
 | Backend   | NestJS, Prisma, PostgreSQL, Redis                                          |
 | Real-time | Socket.io (board card sync only)                                           |
-| Auth      | JWT access tokens (15m) + Redis-backed refresh token rotation (7d)         |
+| Auth      | Magic link (passwordless) · JWT access tokens (15m) · Redis-backed refresh token rotation (7d) |
 | Monorepo  | pnpm workspaces + Turborepo                                                |
 | Infra     | Docker Compose (all services containerized)                                |
 
@@ -23,14 +23,17 @@ pnpm install
 
 # 2. Copy and fill in secrets
 cp .env.example .env
-# Edit .env: generate JWT_SECRET and JWT_REFRESH_SECRET with:
-# openssl rand -hex 64
+# Required secrets:
+#   JWT_SECRET, JWT_REFRESH_SECRET — generate with: openssl rand -hex 64
+#   RESEND_API_KEY — get at resend.com (needed for magic link login and email verification)
+# Optional:
+#   UNSPLASH_ACCESS_KEY — dashboard background images
 
 # 3. Start all services (builds images on first run)
 docker compose up --build
 
 # 4. Run the initial database migration
-docker compose exec api pnpm prisma migrate dev --name init
+docker compose exec api pnpm --filter api exec prisma migrate dev --name init
 ```
 
 Once up:
@@ -60,12 +63,15 @@ All request/response shapes are defined once in `packages/types` and imported by
 docker compose up
 
 # Prisma
-docker compose exec api pnpm prisma migrate dev     # new migration
-docker compose exec api pnpm prisma generate        # regenerate client
-docker compose exec api pnpm prisma studio          # open Studio
+docker compose exec api pnpm --filter api exec prisma migrate dev --name <name>  # new migration
+docker compose exec api pnpm --filter api exec prisma generate                    # regenerate client
+docker compose exec api pnpm --filter api exec prisma studio                      # open Studio
 
 # Tests
-docker compose exec api pnpm jest path/to/file.spec.ts
+docker compose exec api pnpm --filter api jest path/to/file.spec.ts  # single file
+docker compose exec api pnpm --filter api test                        # all unit tests
+docker compose exec api pnpm --filter api test:e2e                    # integration tests (Supertest)
+pnpm exec playwright test                                              # E2E tests (Playwright, runs on host)
 
 # Rebuild a service after Dockerfile or dependency changes
 docker compose build api
