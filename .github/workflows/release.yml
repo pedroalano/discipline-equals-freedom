@@ -77,7 +77,7 @@ jobs:
           envs: TAG
           script: |
             set -euo pipefail
-            cd /opt/zenfocus
+            cd /home/ubuntu/focus-zen
             git fetch --depth=1 origin main
             git reset --hard origin/main
             export TAG=${{ needs.build.outputs.tag }}
