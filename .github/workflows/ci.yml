@@ -10,7 +10,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @zenfocus/types build
+
+      - run: pnpm turbo run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @zenfocus/types build
+
+      - run: pnpm --filter api exec prisma generate
+
+      - run: pnpm turbo run typecheck
+
+  test:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -65,4 +107,4 @@ jobs:
 
       - run: pnpm --filter api exec prisma migrate deploy
 
-      - run: pnpm turbo run lint typecheck test
+      - run: pnpm turbo run test
