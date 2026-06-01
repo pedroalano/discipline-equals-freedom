@@ -1,17 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { localDateISO } from '@/lib/date';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
-import { io, type Socket } from 'socket.io-client';
 import type {
   BoardDetailResponse,
-  CardCreatedEvent,
-  CardDeletedEvent,
-  CardMovedEvent,
   CardResponse,
-  CardUpdatedEvent,
   CreateCardRequest,
   ListResponse,
   MoveToTodayResponse,
@@ -21,18 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { KanbanList } from './KanbanList';
 import { useBoardUIStore } from '../../store/board';
-
-const WS_URL = process.env['NEXT_PUBLIC_WS_URL'] ?? 'http://localhost:3001';
-
-if (
-  process.env['NODE_ENV'] === 'production' &&
-  !WS_URL.startsWith('wss://') &&
-  !WS_URL.startsWith('https://')
-) {
-  throw new Error(
-    'NEXT_PUBLIC_WS_URL must use wss:// or https:// in production — refusing to send credentials over plaintext.',
-  );
-}
+import { useWebSocketBoard } from '../../hooks/useWebSocketBoard';
 
 interface Props {
   initialData: BoardDetailResponse;
@@ -49,71 +33,14 @@ function resolvePosition(
 }
 
 export function KanbanBoard({ initialData }: Props) {
-  const [lists, setLists] = useState<ListResponse[]>(
-    [...(initialData.lists ?? [])].sort((a, b) => a.position - b.position),
-  );
+  const { lists, setLists, applyCardMoved, applyCardUpdated, applyCardCreated, applyCardDeleted } =
+    useWebSocketBoard(initialData.id, initialData.lists ?? []);
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
   const [isAddingList, setIsAddingList] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
-  const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
   const queryClient = useQueryClient();
-
-  // Sync WS events into local state
-  const applyCardMoved = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => {
-        const withoutCard = list.cards.filter((c) => c.id !== card.id);
-        if (list.id === card.listId) {
-          return { ...list, cards: [...withoutCard, card].sort((a, b) => a.position - b.position) };
-        }
-        return { ...list, cards: withoutCard };
-      }),
-    );
-  }, []);
-
-  const applyCardUpdated = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => ({
-        ...list,
-        cards: list.cards.map((c) => (c.id === card.id ? card : c)),
-      })),
-    );
-  }, []);
-
-  const applyCardCreated = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => {
-        if (list.id !== card.listId) return list;
-        if (list.cards.some((c) => c.id === card.id)) return list;
-        return { ...list, cards: [...list.cards, card].sort((a, b) => a.position - b.position) };
-      }),
-    );
-  }, []);
-
-  const applyCardDeleted = useCallback((cardId: string) => {
-    setLists((prev) =>
-      prev.map((list) => ({ ...list, cards: list.cards.filter((c) => c.id !== cardId) })),
-    );
-  }, []);
-
-  useEffect(() => {
-    const socket = io(WS_URL, { withCredentials: true });
-    socketRef.current = socket;
-
-    socket.emit('board:join', initialData.id);
-
-    socket.on('card:moved', ({ card }: CardMovedEvent) => applyCardMoved(card));
-    socket.on('card:updated', ({ card }: CardUpdatedEvent) => applyCardUpdated(card));
-    socket.on('card:created', ({ card }: CardCreatedEvent) => applyCardCreated(card));
-    socket.on('card:deleted', ({ cardId }: CardDeletedEvent) => applyCardDeleted(cardId));
-
-    return () => {
-      socket.emit('board:leave', initialData.id);
-      socket.disconnect();
-    };
-  }, [initialData.id, applyCardMoved, applyCardUpdated, applyCardCreated, applyCardDeleted]);
 
   async function handleColumnDragEnd(
     draggableId: string,
