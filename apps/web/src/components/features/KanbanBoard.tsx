@@ -38,8 +38,14 @@ interface Props {
   initialData: BoardDetailResponse;
 }
 
-function positionBetween(a: number, b: number): number {
-  return (a + b) / 2;
+function resolvePosition(
+  before: { position: number } | undefined,
+  after: { position: number } | undefined,
+): number {
+  if (!before && !after) return 1.0;
+  if (!before) return after!.position / 2;
+  if (!after) return before.position + 1.0;
+  return (before.position + after.position) / 2;
 }
 
 export function KanbanBoard({ initialData }: Props) {
@@ -109,50 +115,41 @@ export function KanbanBoard({ initialData }: Props) {
     };
   }, [initialData.id, applyCardMoved, applyCardUpdated, applyCardCreated, applyCardDeleted]);
 
-  async function handleDragEnd(result: DropResult) {
-    setDragging(null);
-    const { draggableId, source, destination, type } = result;
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index)
-      return;
+  async function handleColumnDragEnd(
+    draggableId: string,
+    source: { index: number },
+    destination: { index: number },
+  ) {
+    const prev = [...lists];
+    const reordered = [...lists];
+    const [moved] = reordered.splice(source.index, 1);
+    reordered.splice(destination.index, 0, moved!);
 
-    if (type === 'COLUMN') {
-      const prev = [...lists];
-      const reordered = [...lists];
-      const [moved] = reordered.splice(source.index, 1);
-      reordered.splice(destination.index, 0, moved!);
+    const newPosition = resolvePosition(
+      reordered[destination.index - 1],
+      reordered[destination.index + 1],
+    );
 
-      const before = reordered[destination.index - 1];
-      const after = reordered[destination.index + 1];
+    setLists(
+      reordered.map((l, i) => (i === destination.index ? { ...l, position: newPosition } : l)),
+    );
 
-      let newPosition: number;
-      if (!before && !after) {
-        newPosition = 1.0;
-      } else if (!before) {
-        newPosition = after!.position / 2;
-      } else if (!after) {
-        newPosition = before.position + 1.0;
-      } else {
-        newPosition = positionBetween(before.position, after.position);
-      }
-
-      setLists(
-        reordered.map((l, i) => (i === destination.index ? { ...l, position: newPosition } : l)),
-      );
-
-      try {
-        await fetch(`/api/lists/${draggableId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ position: newPosition }),
-        });
-        void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
-      } catch {
-        setLists(prev);
-      }
-      return;
+    try {
+      await fetch(`/api/lists/${draggableId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position: newPosition }),
+      });
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
+    } catch {
+      setLists(prev);
     }
+  }
 
+  async function handleCardDragEnd(
+    draggableId: string,
+    destination: { droppableId: string; index: number },
+  ) {
     const destList = lists.find((l) => l.id === destination.droppableId);
     if (!destList) return;
 
@@ -160,30 +157,15 @@ export function KanbanBoard({ initialData }: Props) {
       .filter((c) => c.id !== draggableId)
       .sort((a, b) => a.position - b.position);
 
-    const before = sortedDestCards[destination.index - 1];
-    const after = sortedDestCards[destination.index];
+    const newPosition = resolvePosition(
+      sortedDestCards[destination.index - 1],
+      sortedDestCards[destination.index],
+    );
 
-    let newPosition: number;
-    if (!before && !after) {
-      newPosition = 1.0;
-    } else if (!before) {
-      newPosition = after!.position / 2;
-    } else if (!after) {
-      newPosition = before.position + 1.0;
-    } else {
-      newPosition = positionBetween(before.position, after.position);
-    }
-
-    // Optimistic update
     const movedCard = lists.flatMap((l) => l.cards).find((c) => c.id === draggableId);
     if (!movedCard) return;
 
-    const optimistic: CardResponse = {
-      ...movedCard,
-      listId: destination.droppableId,
-      position: newPosition,
-    };
-    applyCardMoved(optimistic);
+    applyCardMoved({ ...movedCard, listId: destination.droppableId, position: newPosition });
 
     if (destList.title.toLowerCase() === 'done') {
       setDoneCount((n) => n + 1);
@@ -205,8 +187,21 @@ export function KanbanBoard({ initialData }: Props) {
       }
       void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     } catch {
-      // Revert on error
       applyCardMoved(movedCard);
+    }
+  }
+
+  async function handleDragEnd(result: DropResult) {
+    setDragging(null);
+    const { draggableId, source, destination, type } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index)
+      return;
+
+    if (type === 'COLUMN') {
+      await handleColumnDragEnd(draggableId, source, destination);
+    } else {
+      await handleCardDragEnd(draggableId, destination);
     }
   }
 
