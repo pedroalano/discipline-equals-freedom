@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef, type KeyboardEvent } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
 import { HabitBadge } from './HabitBadge';
 import { HabitsModal } from './HabitsModal';
+import { useFocusMutations } from '@/hooks/useFocusMutations';
 
 interface Props {
   date: string;
@@ -16,16 +17,6 @@ async function fetchItems(date: string): Promise<FocusItemListResponse> {
   const res = await fetch(`/api/focus?date=${encodeURIComponent(date)}`);
   if (!res.ok) throw new Error('Failed to fetch');
   return res.json() as Promise<FocusItemListResponse>;
-}
-
-async function patchItem(id: string, body: Partial<FocusItemResponse>): Promise<FocusItemResponse> {
-  const res = await fetch(`/api/focus/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error('Failed to update');
-  return res.json() as Promise<FocusItemResponse>;
 }
 
 function computeMoveUpPosition(items: FocusItemResponse[], idx: number): number {
@@ -43,10 +34,12 @@ function computeMoveDownPosition(items: FocusItemResponse[], idx: number): numbe
 const EMPTY: FocusItemListResponse = { items: [], total: 0, completed: 0 };
 
 export function DailyList({ date, initialData }: Props) {
-  const queryClient = useQueryClient();
   const [text, setText] = useState('');
   const [habitsOpen, setHabitsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { addMutation, toggleMutation, deleteMutation, reorderMutation } =
+    useFocusMutations(date);
 
   const { data = EMPTY } = useQuery({
     queryKey: ['focus', date],
@@ -59,111 +52,9 @@ export function DailyList({ date, initialData }: Props) {
   const taskItems = items.filter((i) => i.habitId === null);
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  const addMutation = useMutation({
-    mutationFn: async (itemText: string) => {
-      const res = await fetch('/api/focus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: itemText, date }),
-      });
-      if (!res.ok) throw new Error('Failed to create');
-      return res.json() as Promise<FocusItemResponse>;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['focus', date] });
-      setText('');
-    },
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: ({
-      id,
-      completed: c,
-    }: {
-      id: string;
-      completed: boolean;
-      habitId: string | null;
-    }) => patchItem(id, { completed: c }),
-    onMutate: async ({ id, completed: c }) => {
-      await queryClient.cancelQueries({ queryKey: ['focus', date] });
-      const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
-      if (prev) {
-        const nextItems = prev.items.map((i) => (i.id === id ? { ...i, completed: c } : i));
-        queryClient.setQueryData<FocusItemListResponse>(['focus', date], {
-          items: nextItems,
-          total: prev.total,
-          completed: nextItems.filter((i) => i.completed).length,
-        });
-      }
-      return { prev };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
-    },
-    onSettled: (_data, _error, variables) => {
-      void queryClient.invalidateQueries({ queryKey: ['focus', date] });
-      if (variables?.completed) {
-        void queryClient.invalidateQueries({ queryKey: ['board', 'modal'] });
-        if (variables.habitId) {
-          void queryClient.invalidateQueries({ queryKey: ['habit-streak', variables.habitId] });
-        }
-      }
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/focus/${id}`, { method: 'DELETE' });
-      if (!res.ok && res.status !== 204) throw new Error('Failed to delete');
-    },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['focus', date] });
-      const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
-      if (prev) {
-        const nextItems = prev.items.filter((i) => i.id !== id);
-        queryClient.setQueryData<FocusItemListResponse>(['focus', date], {
-          items: nextItems,
-          total: nextItems.length,
-          completed: nextItems.filter((i) => i.completed).length,
-        });
-      }
-      return { prev };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['focus', date] });
-    },
-  });
-
-  const reorderMutation = useMutation({
-    mutationFn: ({ id, position }: { id: string; position: number }) => patchItem(id, { position }),
-    onMutate: async ({ id, position }) => {
-      await queryClient.cancelQueries({ queryKey: ['focus', date] });
-      const prev = queryClient.getQueryData<FocusItemListResponse>(['focus', date]);
-      if (prev) {
-        const nextItems = prev.items
-          .map((i) => (i.id === id ? { ...i, position } : i))
-          .sort((a, b) => a.position - b.position);
-        queryClient.setQueryData<FocusItemListResponse>(['focus', date], {
-          ...prev,
-          items: nextItems,
-        });
-      }
-      return { prev };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(['focus', date], ctx.prev);
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['focus', date] });
-    },
-  });
-
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && text.trim()) {
-      addMutation.mutate(text.trim());
+      addMutation.mutate(text.trim(), { onSuccess: () => setText('') });
     }
   }
 
@@ -329,7 +220,7 @@ export function DailyList({ date, initialData }: Props) {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (text.trim()) addMutation.mutate(text.trim());
+              if (text.trim()) addMutation.mutate(text.trim(), { onSuccess: () => setText('') });
             }}
             disabled={!text.trim() || addMutation.isPending}
             className="px-4 py-3 h-auto"
