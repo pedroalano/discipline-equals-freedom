@@ -173,33 +173,24 @@ export class HabitService {
 
     // Walk backwards up to 2 years max
     for (let i = 0; i < 730; i++) {
-      const isScheduledDay = this.isScheduled(scheduledDays, cursor);
-
-      if (!isScheduledDay) {
+      if (!this.isScheduled(scheduledDays, cursor)) {
         cursor = this.prevDay(cursor);
         continue;
       }
 
-      const completed = completionMap.get(cursor);
-
-      if (completed === true) {
+      if (completionMap.get(cursor) === true) {
         streak++;
         cursor = this.prevDay(cursor);
-      } else if (completed === false) {
-        // Explicitly failed — streak ends. But skip today if not yet completed.
-        if (cursor === todayStr) {
-          cursor = this.prevDay(cursor);
-          continue;
-        }
-        break;
-      } else {
-        // No record: either in the future or a past gap
-        if (cursor === todayStr) {
-          cursor = this.prevDay(cursor);
-          continue;
-        }
-        break;
+        continue;
       }
+
+      // Not completed or no record — today may not be done yet so skip it;
+      // any past gap breaks the streak.
+      if (cursor === todayStr) {
+        cursor = this.prevDay(cursor);
+        continue;
+      }
+      break;
     }
 
     return streak;
