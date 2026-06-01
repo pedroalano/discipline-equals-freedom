@@ -8,5 +8,6 @@ import { CardController } from './card.controller';
   imports: [PrismaModule, BoardModule],
   providers: [CardService],
   controllers: [CardController],
+  exports: [CardService],
 })
 export class CardModule {}

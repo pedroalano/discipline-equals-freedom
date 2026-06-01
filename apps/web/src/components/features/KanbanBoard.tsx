@@ -1,17 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { localDateISO } from '@/lib/date';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
-import { io, type Socket } from 'socket.io-client';
 import type {
   BoardDetailResponse,
-  CardCreatedEvent,
-  CardDeletedEvent,
-  CardMovedEvent,
   CardResponse,
-  CardUpdatedEvent,
   CreateCardRequest,
   ListResponse,
   MoveToTodayResponse,
@@ -21,138 +16,67 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { KanbanList } from './KanbanList';
 import { useBoardUIStore } from '../../store/board';
-
-const WS_URL = process.env['NEXT_PUBLIC_WS_URL'] ?? 'http://localhost:3001';
-
-if (
-  process.env['NODE_ENV'] === 'production' &&
-  !WS_URL.startsWith('wss://') &&
-  !WS_URL.startsWith('https://')
-) {
-  throw new Error(
-    'NEXT_PUBLIC_WS_URL must use wss:// or https:// in production — refusing to send credentials over plaintext.',
-  );
-}
+import { useWebSocketBoard } from '../../hooks/useWebSocketBoard';
 
 interface Props {
   initialData: BoardDetailResponse;
 }
 
-function positionBetween(a: number, b: number): number {
-  return (a + b) / 2;
+function resolvePosition(
+  before: { position: number } | undefined,
+  after: { position: number } | undefined,
+): number {
+  if (!before && !after) return 1.0;
+  if (!before) return after!.position / 2;
+  if (!after) return before.position + 1.0;
+  return (before.position + after.position) / 2;
 }
 
 export function KanbanBoard({ initialData }: Props) {
-  const [lists, setLists] = useState<ListResponse[]>(
-    [...(initialData.lists ?? [])].sort((a, b) => a.position - b.position),
-  );
+  const { lists, setLists, applyCardMoved, applyCardUpdated, applyCardCreated, applyCardDeleted } =
+    useWebSocketBoard(initialData.id, initialData.lists ?? []);
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
   const [isAddingList, setIsAddingList] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
-  const socketRef = useRef<Socket | null>(null);
   const setDragging = useBoardUIStore((s) => s.setDragging);
   const queryClient = useQueryClient();
 
-  // Sync WS events into local state
-  const applyCardMoved = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => {
-        const withoutCard = list.cards.filter((c) => c.id !== card.id);
-        if (list.id === card.listId) {
-          return { ...list, cards: [...withoutCard, card].sort((a, b) => a.position - b.position) };
-        }
-        return { ...list, cards: withoutCard };
-      }),
+  async function handleColumnDragEnd(
+    draggableId: string,
+    source: { index: number },
+    destination: { index: number },
+  ) {
+    const prev = [...lists];
+    const reordered = [...lists];
+    const [moved] = reordered.splice(source.index, 1);
+    reordered.splice(destination.index, 0, moved!);
+
+    const newPosition = resolvePosition(
+      reordered[destination.index - 1],
+      reordered[destination.index + 1],
     );
-  }, []);
 
-  const applyCardUpdated = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => ({
-        ...list,
-        cards: list.cards.map((c) => (c.id === card.id ? card : c)),
-      })),
+    setLists(
+      reordered.map((l, i) => (i === destination.index ? { ...l, position: newPosition } : l)),
     );
-  }, []);
 
-  const applyCardCreated = useCallback((card: CardResponse) => {
-    setLists((prev) =>
-      prev.map((list) => {
-        if (list.id !== card.listId) return list;
-        if (list.cards.some((c) => c.id === card.id)) return list;
-        return { ...list, cards: [...list.cards, card].sort((a, b) => a.position - b.position) };
-      }),
-    );
-  }, []);
-
-  const applyCardDeleted = useCallback((cardId: string) => {
-    setLists((prev) =>
-      prev.map((list) => ({ ...list, cards: list.cards.filter((c) => c.id !== cardId) })),
-    );
-  }, []);
-
-  useEffect(() => {
-    const socket = io(WS_URL, { withCredentials: true });
-    socketRef.current = socket;
-
-    socket.emit('board:join', initialData.id);
-
-    socket.on('card:moved', ({ card }: CardMovedEvent) => applyCardMoved(card));
-    socket.on('card:updated', ({ card }: CardUpdatedEvent) => applyCardUpdated(card));
-    socket.on('card:created', ({ card }: CardCreatedEvent) => applyCardCreated(card));
-    socket.on('card:deleted', ({ cardId }: CardDeletedEvent) => applyCardDeleted(cardId));
-
-    return () => {
-      socket.emit('board:leave', initialData.id);
-      socket.disconnect();
-    };
-  }, [initialData.id, applyCardMoved, applyCardUpdated, applyCardCreated, applyCardDeleted]);
-
-  async function handleDragEnd(result: DropResult) {
-    setDragging(null);
-    const { draggableId, source, destination, type } = result;
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index)
-      return;
-
-    if (type === 'COLUMN') {
-      const prev = [...lists];
-      const reordered = [...lists];
-      const [moved] = reordered.splice(source.index, 1);
-      reordered.splice(destination.index, 0, moved!);
-
-      const before = reordered[destination.index - 1];
-      const after = reordered[destination.index + 1];
-
-      let newPosition: number;
-      if (!before && !after) {
-        newPosition = 1.0;
-      } else if (!before) {
-        newPosition = after!.position / 2;
-      } else if (!after) {
-        newPosition = before.position + 1.0;
-      } else {
-        newPosition = positionBetween(before.position, after.position);
-      }
-
-      setLists(
-        reordered.map((l, i) => (i === destination.index ? { ...l, position: newPosition } : l)),
-      );
-
-      try {
-        await fetch(`/api/lists/${draggableId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ position: newPosition }),
-        });
-        void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
-      } catch {
-        setLists(prev);
-      }
-      return;
+    try {
+      await fetch(`/api/lists/${draggableId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ position: newPosition }),
+      });
+      void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
+    } catch {
+      setLists(prev);
     }
+  }
 
+  async function handleCardDragEnd(
+    draggableId: string,
+    destination: { droppableId: string; index: number },
+  ) {
     const destList = lists.find((l) => l.id === destination.droppableId);
     if (!destList) return;
 
@@ -160,30 +84,15 @@ export function KanbanBoard({ initialData }: Props) {
       .filter((c) => c.id !== draggableId)
       .sort((a, b) => a.position - b.position);
 
-    const before = sortedDestCards[destination.index - 1];
-    const after = sortedDestCards[destination.index];
+    const newPosition = resolvePosition(
+      sortedDestCards[destination.index - 1],
+      sortedDestCards[destination.index],
+    );
 
-    let newPosition: number;
-    if (!before && !after) {
-      newPosition = 1.0;
-    } else if (!before) {
-      newPosition = after!.position / 2;
-    } else if (!after) {
-      newPosition = before.position + 1.0;
-    } else {
-      newPosition = positionBetween(before.position, after.position);
-    }
-
-    // Optimistic update
     const movedCard = lists.flatMap((l) => l.cards).find((c) => c.id === draggableId);
     if (!movedCard) return;
 
-    const optimistic: CardResponse = {
-      ...movedCard,
-      listId: destination.droppableId,
-      position: newPosition,
-    };
-    applyCardMoved(optimistic);
+    applyCardMoved({ ...movedCard, listId: destination.droppableId, position: newPosition });
 
     if (destList.title.toLowerCase() === 'done') {
       setDoneCount((n) => n + 1);
@@ -205,8 +114,21 @@ export function KanbanBoard({ initialData }: Props) {
       }
       void queryClient.invalidateQueries({ queryKey: ['board', 'modal', initialData.id] });
     } catch {
-      // Revert on error
       applyCardMoved(movedCard);
+    }
+  }
+
+  async function handleDragEnd(result: DropResult) {
+    setDragging(null);
+    const { draggableId, source, destination, type } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index)
+      return;
+
+    if (type === 'COLUMN') {
+      await handleColumnDragEnd(draggableId, source, destination);
+    } else {
+      await handleCardDragEnd(draggableId, destination);
     }
   }
 

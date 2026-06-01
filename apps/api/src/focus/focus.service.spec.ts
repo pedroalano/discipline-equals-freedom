@@ -2,7 +2,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { FocusService } from './focus.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { BoardGateway } from '../board/board.gateway';
+import { CardService } from '../card/card.service';
 
 const mockPrisma = {
   focusItem: {
@@ -21,17 +21,10 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  card: {
-    findFirst: jest.fn(),
-    update: jest.fn(),
-  },
-  list: {
-    findFirst: jest.fn(),
-  },
 };
 
-const mockGateway = {
-  emitCardMoved: jest.fn(),
+const mockCardService = {
+  moveLinkedFocusItemToDone: jest.fn(),
 };
 
 // April 16, 2026 is a Thursday (UTC day = 4)
@@ -50,25 +43,6 @@ function makeFocusItem(overrides = {}) {
     position: 0,
     habitId: null,
     createdAt: now,
-    ...overrides,
-  };
-}
-
-function makeCard(overrides = {}) {
-  return {
-    id: 'card-1',
-    listId: 'list-1',
-    title: 'Test Card',
-    description: null,
-    position: 0,
-    isToday: false,
-    focusItemId: 'focus-1',
-    createdAt: now,
-    updatedAt: now,
-    list: {
-      boardId: 'board-1',
-      board: { id: 'board-1' },
-    },
     ...overrides,
   };
 }
@@ -97,7 +71,7 @@ describe('FocusService', () => {
       providers: [
         FocusService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: BoardGateway, useValue: mockGateway },
+        { provide: CardService, useValue: mockCardService },
       ],
     }).compile();
 
@@ -105,6 +79,7 @@ describe('FocusService', () => {
     jest.clearAllMocks();
     mockPrisma.user.update.mockResolvedValue({});
     mockPrisma.focusItem.createMany.mockResolvedValue({ count: 0 });
+    mockCardService.moveLinkedFocusItemToDone.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -273,76 +248,31 @@ describe('FocusService', () => {
   });
 
   describe('update', () => {
-    it('updates text without triggering moveLinkedCardToDone', async () => {
+    it('updates text without delegating to CardService', async () => {
       mockPrisma.focusItem.findUnique.mockResolvedValueOnce(makeFocusItem());
       mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ text: 'Updated' }));
 
       await service.update('user-1', 'focus-1', { text: 'Updated' });
 
-      expect(mockPrisma.card.findFirst).not.toHaveBeenCalled();
+      expect(mockCardService.moveLinkedFocusItemToDone).not.toHaveBeenCalled();
     });
 
-    it('triggers moveLinkedCardToDone when completed is set to true', async () => {
-      const card = makeCard();
-      const doneList = { id: 'done-list-1', boardId: 'board-1', title: 'Done' };
-      const movedCard = { ...makeCard(), listId: 'done-list-1', position: 1.0 };
-
+    it('delegates to CardService.moveLinkedFocusItemToDone when completed is set to true', async () => {
       mockPrisma.focusItem.findUnique.mockResolvedValueOnce(makeFocusItem());
       mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ completed: true }));
-      mockPrisma.card.findFirst.mockResolvedValueOnce(card); // linked card
-      mockPrisma.list.findFirst.mockResolvedValueOnce(doneList); // done list found
-      mockPrisma.card.findFirst.mockResolvedValueOnce(null); // last in done list (empty)
-      mockPrisma.card.update.mockResolvedValueOnce(movedCard);
 
       await service.update('user-1', 'focus-1', { completed: true });
 
-      expect(mockPrisma.card.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ listId: doneList.id, position: 1.0 }),
-        }),
-      );
-      expect(mockGateway.emitCardMoved).toHaveBeenCalledWith('board-1', expect.any(Object));
+      expect(mockCardService.moveLinkedFocusItemToDone).toHaveBeenCalledWith('focus-1');
     });
 
-    it('does not move card when no card is linked to the focus item', async () => {
+    it('does not delegate to CardService when completed is not set', async () => {
       mockPrisma.focusItem.findUnique.mockResolvedValueOnce(makeFocusItem());
-      mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ completed: true }));
-      mockPrisma.card.findFirst.mockResolvedValueOnce(null); // no linked card
+      mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ position: 1 }));
 
-      await service.update('user-1', 'focus-1', { completed: true });
+      await service.update('user-1', 'focus-1', { position: 1 });
 
-      expect(mockPrisma.list.findFirst).not.toHaveBeenCalled();
-      expect(mockGateway.emitCardMoved).not.toHaveBeenCalled();
-    });
-
-    it('does not move card when no done list exists on the board', async () => {
-      const card = makeCard();
-
-      mockPrisma.focusItem.findUnique.mockResolvedValueOnce(makeFocusItem());
-      mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ completed: true }));
-      mockPrisma.card.findFirst.mockResolvedValueOnce(card);
-      mockPrisma.list.findFirst.mockResolvedValueOnce(null); // no done list
-
-      await service.update('user-1', 'focus-1', { completed: true });
-
-      expect(mockPrisma.card.update).not.toHaveBeenCalled();
-      expect(mockGateway.emitCardMoved).not.toHaveBeenCalled();
-    });
-
-    it('does not move card when it is already in the done list', async () => {
-      const doneListId = 'done-list-1';
-      const card = makeCard({ listId: doneListId });
-      const doneList = { id: doneListId, boardId: 'board-1', title: 'Done' };
-
-      mockPrisma.focusItem.findUnique.mockResolvedValueOnce(makeFocusItem());
-      mockPrisma.focusItem.update.mockResolvedValueOnce(makeFocusItem({ completed: true }));
-      mockPrisma.card.findFirst.mockResolvedValueOnce(card);
-      mockPrisma.list.findFirst.mockResolvedValueOnce(doneList);
-
-      await service.update('user-1', 'focus-1', { completed: true });
-
-      expect(mockPrisma.card.update).not.toHaveBeenCalled();
-      expect(mockGateway.emitCardMoved).not.toHaveBeenCalled();
+      expect(mockCardService.moveLinkedFocusItemToDone).not.toHaveBeenCalled();
     });
 
     it('throws NotFoundException when focus item does not exist', async () => {

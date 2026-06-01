@@ -105,6 +105,32 @@ export class CardService {
     return response;
   }
 
+  async moveLinkedFocusItemToDone(focusItemId: string): Promise<void> {
+    const card = await this.prisma.card.findFirst({
+      where: { focusItemId },
+      include: { list: { include: { board: true } } },
+    });
+    if (!card) return;
+
+    const doneList = await this.prisma.list.findFirst({
+      where: { boardId: card.list.boardId, title: { equals: 'done', mode: 'insensitive' } },
+    });
+    if (!doneList || card.listId === doneList.id) return;
+
+    const last = await this.prisma.card.findFirst({
+      where: { listId: doneList.id },
+      orderBy: { position: 'desc' },
+    });
+    const position = last ? last.position + 1.0 : 1.0;
+
+    const moved = await this.prisma.card.update({
+      where: { id: card.id },
+      data: { listId: doneList.id, position, updatedAt: new Date() },
+    });
+
+    this.gateway.emitCardMoved(card.list.boardId, this.format(moved));
+  }
+
   async delete(userId: string, cardId: string): Promise<void> {
     const card = await this.prisma.card.findUnique({
       where: { id: cardId },

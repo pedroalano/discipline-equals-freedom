@@ -1,16 +1,16 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { BoardGateway } from '../board/board.gateway';
+import { CardService } from '../card/card.service';
 import type { CreateFocusItemDto } from './dto/create-focus-item.dto';
 import type { UpdateFocusItemDto } from './dto/update-focus-item.dto';
-import type { CardResponse, FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
-import type { Card, FocusItem } from '@prisma/client';
+import type { FocusItemListResponse, FocusItemResponse } from '@zenfocus/types';
+import type { FocusItem } from '@prisma/client';
 
 @Injectable()
 export class FocusService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly gateway: BoardGateway,
+    private readonly cards: CardService,
   ) {}
 
   async getByDate(userId: string, dateStr: string): Promise<FocusItemListResponse> {
@@ -108,54 +108,10 @@ export class FocusService {
     });
 
     if (dto.completed === true) {
-      await this.moveLinkedCardToDone(id);
+      await this.cards.moveLinkedFocusItemToDone(id);
     }
 
     return this.format(updated);
-  }
-
-  private async moveLinkedCardToDone(focusItemId: string): Promise<void> {
-    const card = await this.prisma.card.findFirst({
-      where: { focusItemId },
-      include: { list: { include: { board: true } } },
-    });
-    if (!card) return;
-
-    const doneList = await this.prisma.list.findFirst({
-      where: { boardId: card.list.boardId, title: { equals: 'done', mode: 'insensitive' } },
-    });
-    if (!doneList || card.listId === doneList.id) return;
-
-    const last = await this.prisma.card.findFirst({
-      where: { listId: doneList.id },
-      orderBy: { position: 'desc' },
-    });
-    const position = last ? last.position + 1.0 : 1.0;
-
-    const moved = await this.prisma.card.update({
-      where: { id: card.id },
-      data: { listId: doneList.id, position, updatedAt: new Date() },
-    });
-
-    this.gateway.emitCardMoved(card.list.boardId, this.formatCard(moved));
-  }
-
-  private formatCard(card: Card): CardResponse {
-    return {
-      id: card.id,
-      listId: card.listId,
-      title: card.title,
-      description: card.description,
-      position: card.position,
-      isToday: card.isToday,
-      focusItemId: card.focusItemId,
-      priority: card.priority,
-      dueDate: card.dueDate ? card.dueDate.toISOString() : null,
-      labels: card.labels,
-      color: card.color,
-      createdAt: card.createdAt.toISOString(),
-      updatedAt: card.updatedAt.toISOString(),
-    };
   }
 
   async delete(userId: string, id: string): Promise<void> {
