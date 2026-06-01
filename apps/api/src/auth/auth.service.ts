@@ -7,6 +7,7 @@ import type { Redis } from 'ioredis';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
+import { REFRESH_TOKEN_TTL, REDIS_SCAN_BATCH, redisKeys } from './redis-keys.constants';
 import type { AuthResponse } from '@zenfocus/types';
 
 const MAGIC_LINK_TTL = 15 * 60; // 15min
@@ -27,7 +28,7 @@ export class AuthService {
   async requestMagicLink(email: string): Promise<{ message: string }> {
     const message = 'If that email is valid, a sign-in link has been sent';
 
-    const cooldownKey = `magicLink:cooldown:${email}`;
+    const cooldownKey = redisKeys.magicLinkCooldown(email);
     const cooldown = await this.redis.get(cooldownKey);
     if (cooldown) return { message };
 
@@ -38,7 +39,7 @@ export class AuthService {
 
     const token = crypto.randomBytes(32).toString('hex');
     const hash = this.sha256(token);
-    await this.redis.set(`magicLink:${hash}`, user.id, 'EX', MAGIC_LINK_TTL);
+    await this.redis.set(redisKeys.magicLinkToken(hash), user.id, 'EX', MAGIC_LINK_TTL);
     await this.redis.set(cooldownKey, '1', 'EX', MAGIC_LINK_COOLDOWN);
 
     await this.email.sendMagicLinkEmail(user.email, user.name, token);
@@ -48,7 +49,7 @@ export class AuthService {
 
   async verifyMagicLink(token: string): Promise<AuthResponse> {
     const hash = this.sha256(token);
-    const redisKey = `magicLink:${hash}`;
+    const redisKey = redisKeys.magicLinkToken(hash);
     const userId = await this.redis.get(redisKey);
 
     if (!userId) {
@@ -77,12 +78,12 @@ export class AuthService {
   // ── Logout ───────────────────────────────────────────────────────────────────
 
   async logout(userId: string): Promise<void> {
-    const pattern = `refreshToken:${userId}:*`;
+    const pattern = redisKeys.refreshTokenPattern(userId);
     const keys: string[] = [];
     let cursor = '0';
 
     do {
-      const [next, batch] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      const [next, batch] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', REDIS_SCAN_BATCH);
       cursor = next;
       keys.push(...batch);
     } while (cursor !== '0');
@@ -105,7 +106,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const redisKey = `refreshToken:${payload.sub}:${payload.tokenId}`;
+    const redisKey = redisKeys.refreshToken(payload.sub, payload.tokenId);
     const storedHash = await this.redis.get(redisKey);
     if (!storedHash) throw new UnauthorizedException('Refresh token revoked');
 
@@ -148,7 +149,7 @@ export class AuthService {
     );
 
     const hash = await bcrypt.hash(refreshToken, 10);
-    await this.redis.set(`refreshToken:${userId}:${tokenId}`, hash, 'EX', 7 * 24 * 60 * 60);
+    await this.redis.set(redisKeys.refreshToken(userId, tokenId), hash, 'EX', REFRESH_TOKEN_TTL);
 
     return {
       accessToken,
