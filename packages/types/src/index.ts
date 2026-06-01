@@ -16,20 +16,6 @@ export interface AuthResponse {
   user: UserResponse;
 }
 
-// ── Magic Link ───────────────────────────────────────────────────────────────
-
-export interface RequestMagicLinkRequest {
-  email: string;
-}
-
-export interface RequestMagicLinkResponse {
-  message: string;
-}
-
-export interface VerifyMagicLinkRequest {
-  token: string;
-}
-
 // ── DailyImage ────────────────────────────────────────────────────────────────
 
 export interface DailyImageResponse {
@@ -108,13 +94,8 @@ export interface HabitStreakResponse {
   completedToday: boolean;
 }
 
-export interface HabitAggregateDay {
-  date: string; // YYYY-MM-DD
-  count: number; // distinct habits completed that day
-}
-
 export interface HabitsAggregateCompletionResponse {
-  days: HabitAggregateDay[]; // oldest -> newest, length = requested window
+  days: { date: string; count: number }[]; // oldest -> newest, length = requested window
 }
 
 export interface HabitListResponse {
@@ -125,11 +106,6 @@ export interface HabitListResponse {
 
 export interface CreateBoardRequest {
   title: string;
-}
-export interface UpdateBoardRequest {
-  title?: string;
-  description?: string;
-  color?: string;
 }
 export interface BoardSummaryResponse {
   id: string;
@@ -150,10 +126,6 @@ export interface BoardDetailResponse extends BoardSummaryResponse {
 export interface CreateListRequest {
   title: string;
   boardId: string;
-}
-export interface UpdateListRequest {
-  title?: string;
-  position?: number;
 }
 export interface ListResponse {
   id: string;
@@ -185,10 +157,6 @@ export interface UpdateCardRequest {
   dueDate?: string | null;
   labels?: string[];
   color?: string | null;
-}
-export interface MoveCardRequest {
-  listId: string;
-  position: number;
 }
 export interface CardResponse {
   id: string;
@@ -238,10 +206,6 @@ export interface ProfileResponse {
   };
 }
 
-export interface UpdateNameRequest {
-  name: string;
-}
-
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 
 export const createFocusItemSchema = z.object({
@@ -262,24 +226,13 @@ export const createHabitSchema = z
 
 export type CreateHabitFormData = z.infer<typeof createHabitSchema>;
 
-export const createBoardSchema = z.object({ title: z.string().min(1).max(100) });
-export const createListSchema = z.object({ title: z.string().min(1).max(100) });
-export const createCardSchema = z.object({ title: z.string().min(1).max(200) });
-
 export const updateNameSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
 });
 
 export type CreateFocusItemFormData = z.infer<typeof createFocusItemSchema>;
-export type UpdateNameFormData = z.infer<typeof updateNameSchema>;
 
 export const requestMagicLinkSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export const verifyMagicLinkSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-});
-
-export type RequestMagicLinkFormData = z.infer<typeof requestMagicLinkSchema>;
-export type VerifyMagicLinkFormData = z.infer<typeof verifyMagicLinkSchema>;
