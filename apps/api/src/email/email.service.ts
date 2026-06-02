@@ -17,7 +17,7 @@ export class EmailService {
   }
 
   async sendMagicLinkEmail(to: string, name: string | null, token: string): Promise<void> {
-    const url = `${this.appUrl}/auth/magic?token=${token}`;
+    const url = `${this.appUrl}/api/auth/magic-link/complete?token=${token}`;
     const html = magicLinkEmailHtml(name, url);
 
     const maxAttempts = 3;
