@@ -27,12 +27,15 @@ function MagicLinkVerifier() {
 
         if (cancelled) return;
 
+        // Consume body before branching — ensures Set-Cookie headers are
+        // fully processed by the browser before the next navigation starts.
+        const data = (await res.json().catch(() => ({}))) as { message?: string };
+
         if (typeof window !== 'undefined') {
           window.history.replaceState(null, '', '/auth/magic');
         }
 
         if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { message?: string };
           setError(data.message ?? 'Sign-in link is invalid or expired');
           return;
         }
