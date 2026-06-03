@@ -51,7 +51,7 @@ describe('EmailService', () => {
       );
 
       const call = mockSend.mock.calls[0] as [{ html: string }];
-      expect(call[0].html).toContain('http://localhost:3000/auth/magic?token=abc123');
+      expect(call[0].html).toContain('http://localhost:3000/api/auth/magic-link/complete?token=abc123');
     });
 
     it('throws when Resend returns an error', async () => {
